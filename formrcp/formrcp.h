@@ -2,6 +2,8 @@
 #define FORMRCP_H
 
 #include <QWidget>
+#include "rest/resttablemodel.h"
+#include "rest/restmapper.h"
 
 namespace Ui {
 class FormRcp;
@@ -17,6 +19,12 @@ public:
 
 private:
     Ui::FormRcp *ui;
+    RestTableModel *modelRcp;
+    RestMapper *mapper;
+
+private slots:
+    void upd();
+    void markTextChanged();
 };
 
 #endif // FORMRCP_H
