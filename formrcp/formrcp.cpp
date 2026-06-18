@@ -6,6 +6,7 @@ FormRcp::FormRcp(QWidget *parent)
     , ui(new Ui::FormRcp)
 {
     ui->setupUi(this);
+    id_copy=0;
 
     ui->comboBoxMarkOnly->setModel(RelModels::instance()->getModel("mark"));
     colVal cMark;
@@ -16,6 +17,9 @@ FormRcp::FormRcp(QWidget *parent)
     modelRcp->setPath("api/elrtr/dosage/rcp");
     ui->tableViewRcp->setModel(modelRcp);
 
+    modelRcpData = new RestTableModel("rcp_cont",this);
+    ui->tableViewData->setModel(modelRcpData);
+
     mapper = new RestMapper(ui->tableViewRcp,this);
     mapper->addMapping(ui->comboBoxLev,"lev");
     mapper->addMapping(ui->lineEditNam,"nam");
@@ -25,12 +29,25 @@ FormRcp::FormRcp(QWidget *parent)
 
     connect(ui->comboBoxMarkOnly,SIGNAL(currentIndexChanged(int)),this,SLOT(upd()));
     connect(ui->comboBoxMarkOnly->lineEdit(),SIGNAL(textChanged(QString)),this,SLOT(markTextChanged()));
+    connect(ui->checkBoxOld,SIGNAL(clicked(bool)),this,SLOT(upd()));
+    connect(ui->checkBoxOk,SIGNAL(clicked(bool)),this,SLOT(upd()));
+    connect(ui->checkBoxTest,SIGNAL(clicked(bool)),this,SLOT(upd()));
+    connect(ui->checkBoxBad,SIGNAL(clicked(bool)),this,SLOT(upd()));
+
+    connect(mapper,SIGNAL(currentIndexChanged(int)),this,SLOT(updData(int)));
+    connect(modelRcpData,SIGNAL(sigRefresh()),this,SLOT(calcSum()));
+    connect(modelRcpData,SIGNAL(sigUpd()),this,SLOT(calcSum()));
+    connect(ui->pushButtonCopy,SIGNAL(clicked(bool)),this,SLOT(copy()));
+    connect(ui->pushButtonPaste,SIGNAL(clicked(bool)),this,SLOT(paste()));
+
+    loadSettings();
 
     upd();
 }
 
 FormRcp::~FormRcp()
 {
+    saveSettings();
     delete ui;
 }
 
@@ -41,17 +58,32 @@ void FormRcp::upd()
     if (id_el.val.toInt()>0){
         filter+=modelRcp->tableName()+".id_el = "+id_el.val.toString();
     }
-    /*bool b0=ui->checkBoxOld->isChecked();
-    bool b1=ui->checkBoxOk->isChecked();
-    bool b2=ui->checkBoxTest->isChecked();
-    bool b3=ui->checkBoxBad->isChecked();
-    if (b0||b1||b2||b3){
+    QSet <int> levs;
+    if (ui->checkBoxOld->isChecked()){
+        levs.insert(0);
+    }
+    if (ui->checkBoxOk->isChecked()){
+        levs.insert(1);
+    }
+    if (ui->checkBoxTest->isChecked()){
+        levs.insert(2);
+    }
+    if (ui->checkBoxBad->isChecked()){
+        levs.insert(3);
+    }
+    if (levs.size()){
         if (!filter.isEmpty()){
             filter+=" and ";
         }
-        filter+=modelRcp->tableName()+".lev in (";
-        filter+=")";
-    }*/
+        QString flev;
+        for (const int lev : levs){
+            if (!flev.isEmpty()){
+                flev+=", ";
+            }
+            flev+=QString::number(lev);
+        }
+        filter+=modelRcp->tableName()+".lev in ("+flev+")";
+    }
     modelRcp->setFilter(filter);
     modelRcp->select();
 }
@@ -63,4 +95,52 @@ void FormRcp::markTextChanged()
         cMark.val=-1;
         ui->comboBoxMarkOnly->setCurrentData(cMark);
     }
+}
+
+void FormRcp::updData(int index)
+{
+    int id_rcp=mapper->modelData(index,"id").isNull() ? -1 : mapper->modelData(index,"id").toInt();
+    modelRcpData->setFilter(modelRcpData->tableName()+".id_rcp="+QString::number(id_rcp));
+    modelRcpData->setDefaultValue("id_rcp",id_rcp);
+    modelRcpData->select();
+}
+
+void FormRcp::calcSum()
+{
+    double sum=0.0;
+    for (int i=0; i<modelRcpData->rowCount(); i++){
+        sum+=modelRcpData->getModelData(i,"kvo").toDouble();
+    }
+    ui->lineEditItogo->setText(QLocale().toString(sum,'f',2));
+}
+
+void FormRcp::copy()
+{
+    ui->pushButtonPaste->setEnabled(true);
+    id_copy=modelRcp->getModelData(mapper->currentIndex(),"id").toInt();
+}
+
+void FormRcp::paste()
+{
+
+}
+
+void FormRcp::loadSettings()
+{
+    QSettings settings("szsm", QApplication::applicationName());
+    ui->splitter->restoreState(settings.value("rcp_splitter_state").toByteArray());
+    ui->checkBoxOld->setChecked(settings.value("rcp_ckeck_old").toBool());
+    ui->checkBoxOk->setChecked(settings.value("rcp_ckeck_ok").toBool());
+    ui->checkBoxTest->setChecked(settings.value("rcp_ckeck_test").toBool());
+    ui->checkBoxBad->setChecked(settings.value("rcp_ckeck_bad").toBool());
+}
+
+void FormRcp::saveSettings()
+{
+    QSettings settings("szsm", QApplication::applicationName());
+    settings.setValue("rcp_splitter_state", ui->splitter->saveState());
+    settings.setValue("rcp_ckeck_old",ui->checkBoxOld->isChecked());
+    settings.setValue("rcp_ckeck_ok",ui->checkBoxOk->isChecked());
+    settings.setValue("rcp_ckeck_test",ui->checkBoxTest->isChecked());
+    settings.setValue("rcp_ckeck_bad",ui->checkBoxBad->isChecked());
 }

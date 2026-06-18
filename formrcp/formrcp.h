@@ -2,6 +2,7 @@
 #define FORMRCP_H
 
 #include <QWidget>
+#include <QSettings>
 #include "rest/resttablemodel.h"
 #include "rest/restmapper.h"
 
@@ -18,13 +19,21 @@ public:
     ~FormRcp();
 
 private:
+    int id_copy;
     Ui::FormRcp *ui;
     RestTableModel *modelRcp;
+    RestTableModel *modelRcpData;
     RestMapper *mapper;
+    void loadSettings();
+    void saveSettings();
 
 private slots:
     void upd();
     void markTextChanged();
+    void updData(int index);
+    void calcSum();
+    void copy();
+    void paste();
 };
 
 #endif // FORMRCP_H
