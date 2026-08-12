@@ -85,6 +85,30 @@ QNetworkReply *RestConnection::sendRequest(QUrl url, QString req, const QByteArr
     return reply;
 }
 
+QNetworkReply *RestConnection::sendRequest(QUrl url, QString req, QHttpMultiPart *multiPart)
+{
+    QNetworkRequest request(url);
+    request.setRawHeader("Accept-Charset", "UTF-8");
+    request.setRawHeader("User-Agent", "Appszsm");
+    if (!token.isEmpty()){
+        request.setRawHeader("Authorization", "Bearer "+this->getToken().toUtf8());
+    }
+    QNetworkReply *reply;
+    if (req=="GET"){
+        reply=manager->get(request);
+    } else if (req=="POST"){
+        reply=manager->post(request,multiPart);
+    } else if (req=="PUT"){
+        reply=manager->put(request,multiPart);
+    } else if (req=="DELETE"){
+        reply=manager->deleteResource(request);
+    } else {
+        reply=manager->sendCustomRequest(request,req.toUtf8(),multiPart);
+    }
+    reply->ignoreSslErrors();
+    return reply;
+}
+
 QNetworkReply *RestConnection::sendGet(QUrl url)
 {
     QByteArray body;

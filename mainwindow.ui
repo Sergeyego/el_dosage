@@ -38,6 +38,7 @@
      <string>Рецептуры</string>
     </property>
     <addaction name="actionRcp"/>
+    <addaction name="actionConfRcp"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
@@ -92,6 +93,11 @@
   <action name="action_2">
    <property name="text">
     <string>Партии дозировки</string>
+   </property>
+  </action>
+  <action name="actionConfRcp">
+   <property name="text">
+    <string>Утвержденные рецептуры</string>
    </property>
   </action>
  </widget>

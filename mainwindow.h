@@ -7,6 +7,7 @@
 #include "rest/restconnection.h"
 #include "rest_olap/cubewidget.h"
 #include "formrcp/formrcp.h"
+#include "formconfrcp/formconfrcp.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -33,6 +34,7 @@ private:
 private slots:
     void newAnalytics();
     void newFormRcp();
+    void newFormConfRcp();
 
 };
 #endif // MAINWINDOW_H

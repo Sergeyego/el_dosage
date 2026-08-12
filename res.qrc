@@ -3,5 +3,11 @@
         <file>images/logo.png</file>
         <file>images/key.png</file>
         <file>images/ico.ico</file>
+        <file>images/icons/doc.png</file>
+        <file>images/icons/file.png</file>
+        <file>images/icons/jpg.png</file>
+        <file>images/icons/pdf.png</file>
+        <file>images/icons/png.png</file>
+        <file>images/icons/xls.png</file>
     </qresource>
 </RCC>

@@ -53,6 +53,7 @@ FormRcp::~FormRcp()
 
 void FormRcp::upd()
 {
+    //qDebug()<<"upd!";
     QString filter="";
     colVal id_el=ui->comboBoxMarkOnly->getCurrentData();
     if (id_el.val.toInt()>0){
@@ -90,7 +91,9 @@ void FormRcp::upd()
 
 void FormRcp::markTextChanged()
 {
-    if (ui->comboBoxMarkOnly->currentText().isEmpty()){
+    int currentPos=ui->comboBoxMarkOnly->getCurrentData().val.toInt();
+    //qDebug()<<"textCh"<<currentPos;
+    if (ui->comboBoxMarkOnly->currentText().isEmpty() && currentPos>=0){
         colVal cMark;
         cMark.val=-1;
         ui->comboBoxMarkOnly->setCurrentData(cMark);
