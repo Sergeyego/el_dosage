@@ -7,7 +7,6 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    formconfrcp/formconfrcp.cpp \
     formrcp/formrcp.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -34,7 +33,6 @@ SOURCES += \
     tabmanager.cpp
 
 HEADERS += \
-    formconfrcp/formconfrcp.h \
     formrcp/formrcp.h \
     mainwindow.h \
     models/modelrcpconf.h \
@@ -60,7 +58,6 @@ HEADERS += \
     tabmanager.h
 
 FORMS += \
-    formconfrcp/formconfrcp.ui \
     formrcp/formrcp.ui \
     mainwindow.ui \
     progressreportdialog/progressreportdialog.ui \

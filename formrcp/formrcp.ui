@@ -162,7 +162,7 @@
            <item>
             <widget class="QPushButton" name="pushButtonPaste">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="text">
               <string>Встав. состав</string>
@@ -205,75 +205,22 @@
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <layout class="QGridLayout" name="gridLayout_2">
-         <item row="3" column="0">
-          <widget class="RestComboBox" name="comboBoxGlass"/>
+         <item row="2" column="3">
+          <widget class="QLineEdit" name="lineEditFil"/>
          </item>
          <item row="1" column="3">
           <widget class="QLabel" name="label_7">
            <property name="text">
-            <string>Lобм.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="3">
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>Сух.ост.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="lineEditDiam"/>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLineEdit" name="lineEditKfmp"/>
-         </item>
-         <item row="2" column="4">
-          <widget class="QPushButton" name="pushButtonXlsx">
-           <property name="text">
-            <string>В Excel</string>
+            <string>Фильера</string>
            </property>
           </widget>
          </item>
          <item row="1" column="1">
           <widget class="QLabel" name="label_5">
            <property name="text">
-            <string>Диам.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" colspan="5">
-          <widget class="QLabel" name="label_11">
-           <property name="text">
-            <string>Расчет стоимости на 1 тонну:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label_8">
-           <property name="text">
-            <string>К-во</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="4">
-          <widget class="QLineEdit" name="lineEditGlassSuh"/>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_4">
-           <property name="text">
             <string>кфмп</string>
            </property>
           </widget>
-         </item>
-         <item row="2" column="3">
-          <widget class="QLineEdit" name="lineEditLob"/>
-         </item>
-         <item row="2" column="2">
-          <widget class="QLineEdit" name="lineEditLel"/>
-         </item>
-         <item row="3" column="2">
-          <widget class="QLineEdit" name="lineEditGlassKvo"/>
          </item>
          <item row="1" column="2">
           <widget class="QLabel" name="label_6">
@@ -294,6 +241,56 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item row="2" column="4">
+          <widget class="QPushButton" name="pushButtonXlsx">
+           <property name="text">
+            <string>В Excel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLineEdit" name="lineEditLel"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Диам.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="5">
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>Расчет стоимости на 1 тонну:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="lineEditKfmp"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QComboBox" name="comboBox"/>
+         </item>
+         <item row="3" column="2">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Провол.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3" colspan="2">
+          <widget class="QComboBox" name="comboBox_2"/>
+         </item>
+         <item row="3" column="1">
+          <widget class="RestComboBox" name="comboBoxGlass"/>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>Стекло</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -317,7 +314,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButtonAddApp">
+          <widget class="QPushButton" name="pushButtonAddConf">
            <property name="text">
             <string>Добавить</string>
            </property>
@@ -339,13 +336,16 @@
         </layout>
        </item>
        <item>
-        <widget class="RestTableView" name="tableViewApp">
+        <widget class="QTableView" name="tableViewConf">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
         </widget>
        </item>
       </layout>

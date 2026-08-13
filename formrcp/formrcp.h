@@ -5,6 +5,7 @@
 #include <QSettings>
 #include "rest/resttablemodel.h"
 #include "rest/restmapper.h"
+#include "models/modelrcpconf.h"
 
 namespace Ui {
 class FormRcp;
@@ -24,11 +25,14 @@ private:
     RestTableModel *modelRcp;
     RestTableModel *modelRcpData;
     RestMapper *mapper;
+    ModelRcpConf *modelRcpConf;
     void loadSettings();
     void saveSettings();
 
 private slots:
     void upd();
+    void downloadRcpConf(QModelIndex index);
+    void onRcpConfContextMenuRequested(const QPoint &pos);
     void markTextChanged();
     void updData(int index);
     void calcSum();

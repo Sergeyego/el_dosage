@@ -4,7 +4,7 @@ ModelRcpConf::ModelRcpConf(QObject *parent)
     : QAbstractTableModel{parent}
 {
     isProcessing=false;
-    current_id_el=-1;
+    current_id_rcp=-1;
     header<<tr("Название")<<tr("Дата изменения")<<tr("Размер")<<tr("md5");
 }
 
@@ -54,9 +54,9 @@ int ModelRcpConf::columnCount(const QModelIndex &/*parent*/) const
     return 4;
 }
 
-void ModelRcpConf::refresh(int id_el)
+void ModelRcpConf::refresh(int id_rcp)
 {
-    QUrl url = QUrl(RestConnection::instance()->getUrl()+"/api/elrtr/dosage/s3/files/list/"+QString::number(id_el));
+    QUrl url = QUrl(RestConnection::instance()->getUrl()+"/api/elrtr/dosage/s3/files/list/"+QString::number(id_rcp));
     queue.enqueue(url);
     if (!isProcessing) {
         processNextRequest();
@@ -72,12 +72,12 @@ QIcon ModelRcpConf::getIconByFileName(const QString &fileName) const
 {
     QString suffix = fileName;
     if (suffix.contains('.')) {
-        suffix = suffix.section('.', -1); // Берем всё, что после последней точки
+        suffix = suffix.section('.', -1);
     }
-    suffix = suffix.toLower().trimmed(); // Приводим к нижнему регистру
+    suffix = suffix.toLower().trimmed();
 
     if (suffix.isEmpty()) {
-        suffix = "txt"; // Дефолтное расширение, если ничего не передано
+        suffix = "txt";
     }
 
     enum FileCategory {
@@ -123,12 +123,15 @@ QIcon ModelRcpConf::getIconByFileName(const QString &fileName) const
 
 void ModelRcpConf::upload()
 {
-    if (current_id_el<=0){
+    if (current_id_rcp<=0){
         return;
     }
     QSettings settings("szsm", QApplication::applicationName());
     QDir dir(settings.value("savePath",QDir::homePath()).toString());
     QString filePath=QFileDialog::getOpenFileName(NULL, QString::fromUtf8("Открыть файл"),dir.path());
+
+    if (filePath.isEmpty()) return;
+
     QFile *file = new QFile(filePath, this);
     if (!file->open(QIODevice::ReadOnly)) {
         file->deleteLater();
@@ -158,7 +161,7 @@ void ModelRcpConf::upload()
 
     multiPart->append(filePart);
 
-    QUrl url = QUrl(RestConnection::instance()->getUrl()+"/api/elrtr/dosage/s3/files/upload/"+QString::number(current_id_el));
+    QUrl url = QUrl(RestConnection::instance()->getUrl()+"/api/elrtr/dosage/s3/files/upload/"+QString::number(current_id_rcp));
     QNetworkReply *reply = RestConnection::instance()->sendRequest(url,"POST",multiPart);
     multiPart->setParent(reply);
     connect(reply,SIGNAL(finished()),this,SLOT(onUploadFinished()));
@@ -210,7 +213,7 @@ void ModelRcpConf::onResult()
         return;
     }
     QString lastSegment = QFileInfo(reply->url().path()).fileName();
-    current_id_el=lastSegment.toInt();
+    current_id_rcp=lastSegment.toInt();
     if (reply->error()!=QNetworkReply::NoError){
         QMessageBox::critical(nullptr,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
     } else {
@@ -243,7 +246,7 @@ void ModelRcpConf::onUploadFinished()
     if (reply->error()!=QNetworkReply::NoError){
         QMessageBox::critical(nullptr,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
     } else {
-        refresh(current_id_el);
+        refresh(current_id_rcp);
     }
     reply->deleteLater();
 }

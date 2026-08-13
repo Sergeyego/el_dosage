@@ -23,7 +23,7 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
-    void refresh(int id_el);
+    void refresh(int id_rcp);
     QString getFileName(int index);
     QIcon getIconByFileName(const QString &fileName) const;
 
@@ -31,7 +31,7 @@ private:
     QQueue<QUrl> queue;
     bool isProcessing;
     QVector<QVector<QVariant>> _data;
-    int current_id_el;
+    int current_id_rcp;
     QStringList header;
 
 public slots:

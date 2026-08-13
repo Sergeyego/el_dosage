@@ -25,7 +25,24 @@ FormRcp::FormRcp(QWidget *parent)
     mapper->addMapping(ui->lineEditNam,"nam");
     mapper->addMapping(ui->comboBoxMark,"id_el");
 
+    mapper->addLock(ui->comboBoxMarkOnly);
+    mapper->addLock(ui->checkBoxBad);
+    mapper->addLock(ui->checkBoxOk);
+    mapper->addLock(ui->checkBoxOld);
+    mapper->addLock(ui->checkBoxTest);
+    mapper->addEmptyLock(ui->tableViewData);
+    mapper->addEmptyLock(ui->pushButtonCopy);
+    mapper->addEmptyLock(ui->pushButtonPaste);
+    mapper->addEmptyLock(ui->tableViewConf);
+    mapper->addEmptyLock(ui->pushButtonXlsx);
+    mapper->addEmptyLock(ui->pushButtonAddConf);
+
     ui->horizontalLayoutMapper->insertWidget(0,mapper);
+
+    modelRcpConf = new ModelRcpConf(this);
+    ui->tableViewConf->setModel(modelRcpConf);
+    ui->tableViewConf->setColumnHidden(3,true);
+    ui->tableViewConf->setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(ui->comboBoxMarkOnly,SIGNAL(currentIndexChanged(int)),this,SLOT(upd()));
     connect(ui->comboBoxMarkOnly->lineEdit(),SIGNAL(textChanged(QString)),this,SLOT(markTextChanged()));
@@ -39,6 +56,10 @@ FormRcp::FormRcp(QWidget *parent)
     connect(modelRcpData,SIGNAL(sigUpd()),this,SLOT(calcSum()));
     connect(ui->pushButtonCopy,SIGNAL(clicked(bool)),this,SLOT(copy()));
     connect(ui->pushButtonPaste,SIGNAL(clicked(bool)),this,SLOT(paste()));
+    connect(ui->pushButtonAddConf,SIGNAL(clicked(bool)),modelRcpConf,SLOT(upload()));
+    connect(ui->tableViewConf,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(downloadRcpConf(QModelIndex)));
+    connect(modelRcpConf,SIGNAL(refreshFinished()),ui->tableViewConf,SLOT(resizeColumnsToContents()));
+    connect(ui->tableViewConf,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(onRcpConfContextMenuRequested(QPoint)));
 
     loadSettings();
 
@@ -89,6 +110,43 @@ void FormRcp::upd()
     modelRcp->select();
 }
 
+void FormRcp::downloadRcpConf(QModelIndex index)
+{
+    modelRcpConf->download(modelRcpConf->getFileName(index.row()));
+}
+
+void FormRcp::onRcpConfContextMenuRequested(const QPoint &pos)
+{
+    QModelIndex index = ui->tableViewConf->indexAt(pos);
+    QMenu contextMenu(this);
+
+    QAction *showAction = contextMenu.addAction("Показать");
+    contextMenu.addSeparator();
+    QAction *addAction = contextMenu.addAction("Добавить");
+    contextMenu.addSeparator();
+    QAction *refreshAction = contextMenu.addAction("Обновить");
+    contextMenu.addSeparator();
+    QAction *deleteAction = contextMenu.addAction("Удалить");
+
+    if (!index.isValid()) {
+        showAction->setEnabled(false);
+        deleteAction->setEnabled(false);
+    }
+
+    QPoint globalPos = ui->tableViewConf->viewport()->mapToGlobal(pos);
+    QAction *selectedAction = contextMenu.exec(globalPos);
+
+    if (selectedAction == showAction) {
+        modelRcpConf->download(modelRcpConf->getFileName(index.row()));
+    } if (selectedAction == addAction) {
+        modelRcpConf->upload();
+    } else if (selectedAction == deleteAction) {
+        modelRcpConf->remove(modelRcpConf->getFileName(index.row()));
+    } else if (selectedAction == refreshAction) {
+
+    }
+}
+
 void FormRcp::markTextChanged()
 {
     int currentPos=ui->comboBoxMarkOnly->getCurrentData().val.toInt();
@@ -106,6 +164,7 @@ void FormRcp::updData(int index)
     modelRcpData->setFilter(modelRcpData->tableName()+".id_rcp="+QString::number(id_rcp));
     modelRcpData->setDefaultValue("id_rcp",id_rcp);
     modelRcpData->select();
+    modelRcpConf->refresh(id_rcp);
 }
 
 void FormRcp::calcSum()
@@ -125,7 +184,10 @@ void FormRcp::copy()
 
 void FormRcp::paste()
 {
-
+    QByteArray body, data;
+    int id_rcp = mapper->modelData(mapper->currentIndex(),"id").toInt();
+    RestConnection::instance()->sendSyncRequest("api/elrtr/dosage/paste/"+QString::number(id_copy)+"/"+QString::number(id_rcp),"POST",body,data);
+    modelRcpData->select();
 }
 
 void FormRcp::loadSettings()

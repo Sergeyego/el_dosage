@@ -9,7 +9,6 @@ MainWindow::MainWindow(QWidget *parent)
     tabManager = new TabManager(ui->tabWidget,this);
 
     actAction(ui->actionRcp,&MainWindow::newFormRcp,2);
-    actAction(ui->actionConfRcp,&MainWindow::newFormConfRcp,5);
 
     loadAnalytics();
     tabManager->loadSettings();
@@ -80,12 +79,5 @@ void MainWindow::newFormRcp()
 {
     if (!tabManager->exist(sender())){
         tabManager->addSubWindow(new FormRcp(),sender());
-    }
-}
-
-void MainWindow::newFormConfRcp()
-{
-    if (!tabManager->exist(sender())){
-        tabManager->addSubWindow(new FormConfRcp(),sender());
     }
 }
