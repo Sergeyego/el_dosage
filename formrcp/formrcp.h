@@ -5,6 +5,7 @@
 #include <QSettings>
 #include "rest/resttablemodel.h"
 #include "rest/restmapper.h"
+#include "rest/restrotablemodel.h"
 #include "models/modelrcpconf.h"
 
 namespace Ui {
@@ -24,6 +25,8 @@ private:
     Ui::FormRcp *ui;
     RestTableModel *modelRcp;
     RestTableModel *modelRcpData;
+    RestRoTableModel *modelMode;
+    RestRoTableModel *modelCalc;
     RestMapper *mapper;
     ModelRcpConf *modelRcpConf;
     void loadSettings();
@@ -35,6 +38,9 @@ private slots:
     void onRcpConfContextMenuRequested(const QPoint &pos);
     void markTextChanged();
     void updData(int index);
+    void updMode();
+    void updCacl();
+    void onUpdModeFinifhed();
     void calcSum();
     void copy();
     void paste();

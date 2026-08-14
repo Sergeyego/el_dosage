@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1098</width>
+    <width>1186</width>
     <height>699</height>
    </rect>
   </property>
@@ -204,32 +204,22 @@
      <widget class="QWidget" name="layoutWidget">
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="2" column="3">
-          <widget class="QLineEdit" name="lineEditFil"/>
-         </item>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_7">
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QLabel" name="label_11">
            <property name="text">
-            <string>Фильера</string>
+            <string>Расчет стоимости на 1 тонну:</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_5">
+         <item>
+          <widget class="QPushButton" name="pushButtonXlsx">
            <property name="text">
-            <string>кфмп</string>
+            <string>В Excel</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="2">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>Lэл.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="5">
+         <item>
           <spacer name="horizontalSpacer_4">
            <property name="orientation">
             <enum>Qt::Orientation::Horizontal</enum>
@@ -242,55 +232,92 @@
            </property>
           </spacer>
          </item>
-         <item row="2" column="4">
-          <widget class="QPushButton" name="pushButtonXlsx">
-           <property name="text">
-            <string>В Excel</string>
-           </property>
-          </widget>
+        </layout>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="1" column="1">
+          <widget class="DoubleLineEdit" name="lineEditKfmp"/>
          </item>
-         <item row="2" column="2">
-          <widget class="QLineEdit" name="lineEditLel"/>
-         </item>
-         <item row="1" column="0">
+         <item row="0" column="0">
           <widget class="QLabel" name="label_4">
            <property name="text">
             <string>Диам.</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="0" colspan="5">
-          <widget class="QLabel" name="label_11">
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_5">
            <property name="text">
-            <string>Расчет стоимости на 1 тонну:</string>
+            <string>кфмп</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="lineEditKfmp"/>
+         <item row="1" column="0">
+          <widget class="RestComboBox" name="comboBoxDiam"/>
          </item>
-         <item row="2" column="0">
-          <widget class="QComboBox" name="comboBox"/>
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Длина электрода</string>
+           </property>
+          </widget>
          </item>
-         <item row="3" column="2">
+         <item row="1" column="2">
+          <widget class="RestComboBox" name="comboBoxLel"/>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Фильера</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="DoubleLineEdit" name="lineEditFil"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="label_9">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Стекло</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="RestComboBox" name="comboBoxGlass">
+           <property name="maximumSize">
+            <size>
+             <width>130</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="label_8">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Провол.</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="3" colspan="2">
-          <widget class="QComboBox" name="comboBox_2"/>
-         </item>
-         <item row="3" column="1">
-          <widget class="RestComboBox" name="comboBoxGlass"/>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>Стекло</string>
-           </property>
-          </widget>
+         <item>
+          <widget class="RestComboBox" name="comboBoxProv"/>
          </item>
         </layout>
        </item>
@@ -302,6 +329,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
         </widget>
        </item>
        <item>
@@ -343,6 +373,12 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>160</height>
+          </size>
+         </property>
          <attribute name="verticalHeaderVisible">
           <bool>false</bool>
          </attribute>
@@ -381,6 +417,11 @@
    <class>RestComboBox</class>
    <extends>QComboBox</extends>
    <header>rest/restcombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DoubleLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>widgets/doublelineedit.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

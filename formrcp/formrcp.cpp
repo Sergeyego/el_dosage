@@ -13,6 +13,21 @@ FormRcp::FormRcp(QWidget *parent)
     cMark.val=-1;
     ui->comboBoxMarkOnly->setCurrentData(cMark);
 
+    ui->comboBoxDiam->setModel(RelModels::instance()->getModel("el_diam"));
+    colVal cDim;
+    cDim.val=6;
+    ui->comboBoxDiam->setCurrentData(cDim);
+    ui->comboBoxDiam->setEditable(false);
+
+    ui->comboBoxLel->setModel(RelModels::instance()->getModel("el_long"));
+    ui->comboBoxGlass->setModel(RelModels::instance()->getModel("glass"));
+    ui->comboBoxProv->setModel(RelModels::instance()->getModel("provol"));
+
+    modelMode = new RestRoTableModel(this);
+
+    modelCalc = new RestRoTableModel(this);
+    ui->tableViewCalc->setModel(modelCalc);
+
     modelRcp = new RestTableModel("rcp_nam",this);
     modelRcp->setPath("api/elrtr/dosage/rcp");
     ui->tableViewRcp->setModel(modelRcp);
@@ -60,6 +75,8 @@ FormRcp::FormRcp(QWidget *parent)
     connect(ui->tableViewConf,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(downloadRcpConf(QModelIndex)));
     connect(modelRcpConf,SIGNAL(refreshFinished()),ui->tableViewConf,SLOT(resizeColumnsToContents()));
     connect(ui->tableViewConf,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(onRcpConfContextMenuRequested(QPoint)));
+    connect(modelMode,SIGNAL(sigRefresh()),this,SLOT(onUpdModeFinifhed()));
+    connect(ui->comboBoxDiam,SIGNAL(currentIndexChanged(int)),this,SLOT(updMode()));
 
     loadSettings();
 
@@ -165,6 +182,52 @@ void FormRcp::updData(int index)
     modelRcpData->setDefaultValue("id_rcp",id_rcp);
     modelRcpData->select();
     modelRcpConf->refresh(id_rcp);
+
+    updMode();
+}
+
+void FormRcp::updMode()
+{
+    int id_el=mapper->modelData(mapper->currentIndex(),"id_el").toInt();
+    int id_diam=ui->comboBoxDiam->getCurrentData().val.toInt();
+
+    modelMode->setPath("api/elrtr/dosage/mode/"+QString::number(id_el)+"/"+QString::number(id_diam));
+    modelMode->select();
+}
+
+void FormRcp::updCacl()
+{
+    int id_rcp = mapper->modelData(mapper->currentIndex(),"id").toInt();
+
+    QUrlQuery query;
+    query.addQueryItem("provol",ui->comboBoxProv->currentText());
+    query.addQueryItem("glass",ui->comboBoxGlass->currentText());
+    query.addQueryItem("lel",ui->comboBoxLel->currentText());
+    query.addQueryItem("kfmp",ui->lineEditKfmp->text());
+
+    modelCalc->setPath("api/elrtr/dosage/calc2/"+QString::number(id_rcp)+"?"+query.toString());
+    modelCalc->select();
+}
+
+void FormRcp::onUpdModeFinifhed()
+{
+    ui->lineEditKfmp->setText(modelMode->getModelData(0,"kfmp").toString());
+
+    colVal el_long;
+    el_long.val=modelMode->getModelData(0,"id_long").toInt();
+    ui->comboBoxLel->setCurrentData(el_long);
+
+    ui->lineEditFil->setText(modelMode->getModelData(0,"dfil").toString());
+
+    colVal id_glyb;
+    id_glyb.val=modelMode->getModelData(0,"id_glyb").toInt();
+    ui->comboBoxGlass->setCurrentData(id_glyb);
+
+    colVal id_prov;
+    id_prov.val=modelMode->getModelData(0,"id_prov").toInt();
+    ui->comboBoxProv->setCurrentData(id_prov);
+
+    updCacl();
 }
 
 void FormRcp::calcSum()

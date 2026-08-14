@@ -30,7 +30,8 @@ SOURCES += \
     rest_olap/dialogolapflt.cpp \
     rest_olap/formfilter.cpp \
     rest_olap/olapmodel.cpp \
-    tabmanager.cpp
+    tabmanager.cpp \
+    widgets/doublelineedit.cpp
 
 HEADERS += \
     formrcp/formrcp.h \
@@ -55,7 +56,8 @@ HEADERS += \
     rest_olap/dialogolapflt.h \
     rest_olap/formfilter.h \
     rest_olap/olapmodel.h \
-    tabmanager.h
+    tabmanager.h \
+    widgets/doublelineedit.h
 
 FORMS += \
     formrcp/formrcp.ui \
