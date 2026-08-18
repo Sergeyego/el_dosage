@@ -9,10 +9,12 @@ MainWindow::MainWindow(QWidget *parent)
     tabManager = new TabManager(ui->tabWidget,this);
 
     actAction(ui->actionRcp,&MainWindow::newFormRcp,2);
+    actAction(ui->actionComp,&MainWindow::newFormEdtComp,4);
 
     loadAnalytics();
     tabManager->loadSettings();
     loadSettings();
+    clearEmptyMenus();
 }
 
 MainWindow::~MainWindow()
@@ -64,6 +66,27 @@ void MainWindow::loadAnalytics()
     }
 }
 
+void MainWindow::clearEmptyMenus()
+{
+    QMenuBar* menuBar = this->menuBar();
+    QList<QAction*> actions = menuBar->actions();
+
+    // Перебираем элементы с конца в начало
+    for (int i = actions.count() - 1; i >= 0; --i) {
+        QAction* action = actions.at(i);
+        QMenu* menu = action->menu();
+
+        // Если действие открывает меню и это меню пустое
+        if (menu != nullptr && menu->isEmpty()) {
+            // Удаляем отображение пункта из статус-бара
+            menuBar->removeAction(action);
+
+            // Безопасно уничтожаем объект меню
+            menu->deleteLater();
+        }
+    }
+}
+
 void MainWindow::newAnalytics()
 {
     QAction *action = qobject_cast<QAction *>(sender());
@@ -79,5 +102,12 @@ void MainWindow::newFormRcp()
 {
     if (!tabManager->exist(sender())){
         tabManager->addSubWindow(new FormRcp(),sender());
+    }
+}
+
+void MainWindow::newFormEdtComp()
+{
+    if (!tabManager->exist(sender())){
+        tabManager->addSubWindow(new FormEdtRestTbl(tr("Редактировать список компонентов"),"matr","matr"),sender());
     }
 }

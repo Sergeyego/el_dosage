@@ -31,7 +31,8 @@ SOURCES += \
     rest_olap/formfilter.cpp \
     rest_olap/olapmodel.cpp \
     tabmanager.cpp \
-    widgets/doublelineedit.cpp
+    widgets/doublelineedit.cpp \
+    widgets/formedtresttbl.cpp
 
 HEADERS += \
     formrcp/formrcp.h \
@@ -57,7 +58,8 @@ HEADERS += \
     rest_olap/formfilter.h \
     rest_olap/olapmodel.h \
     tabmanager.h \
-    widgets/doublelineedit.h
+    widgets/doublelineedit.h \
+    widgets/formedtresttbl.h
 
 FORMS += \
     formrcp/formrcp.ui \
@@ -68,7 +70,8 @@ FORMS += \
     rest_olap/axiswidget.ui \
     rest_olap/cubewidget.ui \
     rest_olap/dialogolapflt.ui \
-    rest_olap/formfilter.ui
+    rest_olap/formfilter.ui \
+    widgets/formedtresttbl.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

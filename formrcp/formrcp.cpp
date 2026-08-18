@@ -51,6 +51,13 @@ FormRcp::FormRcp(QWidget *parent)
     mapper->addEmptyLock(ui->tableViewConf);
     mapper->addEmptyLock(ui->pushButtonXlsx);
     mapper->addEmptyLock(ui->pushButtonAddConf);
+    mapper->addEmptyLock(ui->comboBoxDiam);
+    mapper->addEmptyLock(ui->pushButtonReCalc);
+    mapper->addEmptyLock(ui->lineEditKfmp);
+    mapper->addEmptyLock(ui->comboBoxLel);
+    mapper->addEmptyLock(ui->lineEditFil);
+    mapper->addEmptyLock(ui->comboBoxGlass);
+    mapper->addEmptyLock(ui->comboBoxProv);
 
     ui->horizontalLayoutMapper->insertWidget(0,mapper);
 
@@ -75,8 +82,12 @@ FormRcp::FormRcp(QWidget *parent)
     connect(ui->tableViewConf,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(downloadRcpConf(QModelIndex)));
     connect(modelRcpConf,SIGNAL(refreshFinished()),ui->tableViewConf,SLOT(resizeColumnsToContents()));
     connect(ui->tableViewConf,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(onRcpConfContextMenuRequested(QPoint)));
-    connect(modelMode,SIGNAL(sigRefresh()),this,SLOT(onUpdModeFinifhed()));
+    connect(modelMode,SIGNAL(sigRefresh()),this,SLOT(onUpdModeFinisfhed()));
     connect(ui->comboBoxDiam,SIGNAL(currentIndexChanged(int)),this,SLOT(updMode()));
+    connect(ui->pushButtonReCalc,SIGNAL(clicked(bool)),this,SLOT(updCacl()));
+    connect(modelRcpData,SIGNAL(sigUpd()),this,SLOT(updCacl()));
+    connect(ui->pushButtonXlsx,SIGNAL(clicked(bool)),this,SLOT(createXlsx()));
+    connect(ui->pushButtonUpd,SIGNAL(clicked(bool)),this,SLOT(upd()));
 
     loadSettings();
 
@@ -91,7 +102,9 @@ FormRcp::~FormRcp()
 
 void FormRcp::upd()
 {
-    //qDebug()<<"upd!";
+    if (sender()==ui->pushButtonUpd){
+        RelModels::instance()->updateAllRels();
+    }
     QString filter="";
     colVal id_el=ui->comboBoxMarkOnly->getCurrentData();
     if (id_el.val.toInt()>0){
@@ -195,21 +208,69 @@ void FormRcp::updMode()
     modelMode->select();
 }
 
-void FormRcp::updCacl()
+QUrlQuery FormRcp::getRcpQuery()
 {
-    int id_rcp = mapper->modelData(mapper->currentIndex(),"id").toInt();
-
     QUrlQuery query;
     query.addQueryItem("provol",ui->comboBoxProv->currentText());
     query.addQueryItem("glass",ui->comboBoxGlass->currentText());
     query.addQueryItem("lel",ui->comboBoxLel->currentText());
     query.addQueryItem("kfmp",ui->lineEditKfmp->text());
-
-    modelCalc->setPath("api/elrtr/dosage/calc2/"+QString::number(id_rcp)+"?"+query.toString());
-    modelCalc->select();
+    query.addQueryItem("marka",ui->comboBoxMark->currentText());
+    query.addQueryItem("diam",ui->comboBoxDiam->currentText());
+    query.addQueryItem("dfil",ui->lineEditFil->text());
+    return query;
 }
 
-void FormRcp::onUpdModeFinifhed()
+void FormRcp::updCacl()
+{
+    QVariant id_rcp = mapper->modelData(mapper->currentIndex(),"id");
+    if (id_rcp.isNull()){
+        modelCalc->clear();
+    } else {
+        modelCalc->setPath("api/elrtr/dosage/calc/"+id_rcp.toString()+"?"+getRcpQuery().toString());
+        modelCalc->select();
+    }
+}
+
+void FormRcp::createXlsx()
+{
+    QVariant id_rcp = mapper->modelData(mapper->currentIndex(),"id");
+    if (!id_rcp.isNull()){
+        QUrl url(RestConnection::instance()->getUrl()+"/api/elrtr/dosage/xlsx/"+id_rcp.toString()+"?"+getRcpQuery().toString());
+        QDir dir(QDir::tempPath());
+        QString pureFileName = QString::number(QDateTime::currentMSecsSinceEpoch())+"-calc.xlsx";
+        QString fullSavePath = dir.filePath(pureFileName);
+        QNetworkReply *reply = RestConnection::instance()->sendGet(url);
+        reply->setProperty("savePath", fullSavePath);
+        //qDebug()<<fullSavePath;
+        connect(reply,SIGNAL(finished()),this,SLOT(onCreateXlsxFinished()));
+    }
+}
+
+void FormRcp::onCreateXlsxFinished()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    if (!reply){
+        return;
+    }
+    if (reply->error()!=QNetworkReply::NoError){
+        QMessageBox::critical(this,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
+    } else {
+        QString savePath = reply->property("savePath").toString();
+        QFile localFile(savePath);
+        if (localFile.open(QIODevice::WriteOnly)) {
+            localFile.write(reply->readAll());
+            localFile.close();
+            QFileInfo fileInfo(savePath);
+            QDesktopServices::openUrl((QUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()))));
+        } else {
+            QMessageBox::critical(this,tr("Ошибка"),tr("Не удалось записать файл: ")+"\n"+savePath,QMessageBox::Cancel);
+        }
+    }
+    reply->deleteLater();
+}
+
+void FormRcp::onUpdModeFinisfhed()
 {
     ui->lineEditKfmp->setText(modelMode->getModelData(0,"kfmp").toString());
 
@@ -251,6 +312,7 @@ void FormRcp::paste()
     int id_rcp = mapper->modelData(mapper->currentIndex(),"id").toInt();
     RestConnection::instance()->sendSyncRequest("api/elrtr/dosage/paste/"+QString::number(id_copy)+"/"+QString::number(id_rcp),"POST",body,data);
     modelRcpData->select();
+    updCacl();
 }
 
 void FormRcp::loadSettings()

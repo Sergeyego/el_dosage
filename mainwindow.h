@@ -7,6 +7,7 @@
 #include "rest/restconnection.h"
 #include "rest_olap/cubewidget.h"
 #include "formrcp/formrcp.h"
+#include "widgets/formedtresttbl.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -29,10 +30,12 @@ private:
     void loadSettings();
     void saveSettings();
     void loadAnalytics();
+    void clearEmptyMenus();
 
 private slots:
     void newAnalytics();
     void newFormRcp();
+    void newFormEdtComp();
 
 };
 #endif // MAINWINDOW_H

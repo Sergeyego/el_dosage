@@ -39,8 +39,11 @@ private slots:
     void markTextChanged();
     void updData(int index);
     void updMode();
+    QUrlQuery getRcpQuery();
     void updCacl();
-    void onUpdModeFinifhed();
+    void createXlsx();
+    void onCreateXlsxFinished();
+    void onUpdModeFinisfhed();
     void calcSum();
     void copy();
     void paste();

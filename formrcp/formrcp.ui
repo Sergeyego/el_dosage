@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1186</width>
+    <width>1203</width>
     <height>699</height>
    </rect>
   </property>
@@ -44,7 +44,24 @@
         </widget>
        </item>
        <item>
-        <widget class="RestComboBox" name="comboBoxMarkOnly"/>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="RestComboBox" name="comboBoxMarkOnly"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButtonUpd">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Обновить</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QCheckBox" name="checkBoxBad">
@@ -312,12 +329,19 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Провол.</string>
+            <string>Пров.</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="RestComboBox" name="comboBoxProv"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButtonReCalc">
+           <property name="text">
+            <string>Пересчёт</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

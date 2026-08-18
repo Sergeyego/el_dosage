@@ -49,13 +49,11 @@
     <property name="title">
      <string>Засыпка</string>
     </property>
-    <addaction name="action"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="title">
      <string>Дозировка</string>
     </property>
-    <addaction name="action_2"/>
    </widget>
    <widget class="QMenu" name="menu_5">
     <property name="title">
