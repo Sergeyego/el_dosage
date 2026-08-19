@@ -1,6 +1,7 @@
 #ifndef RESTCONNECTION_H
 #define RESTCONNECTION_H
 
+#include <memory>
 #include <QObject>
 #include <QDateTime>
 #include <QApplication>
@@ -31,7 +32,7 @@ protected:
     explicit RestConnection(QObject *parent = nullptr);
 
 private:
-    static RestConnection *connection_instance;
+    static std::unique_ptr<RestConnection> connection_instance;
     QString _url;
     QString token;
     QString currentUser;

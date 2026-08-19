@@ -7,6 +7,7 @@
 #include "rest/restmapper.h"
 #include "rest/restrotablemodel.h"
 #include "models/modelrcpconf.h"
+#include "rest/tempfilemanager.h"
 
 namespace Ui {
 class FormRcp;

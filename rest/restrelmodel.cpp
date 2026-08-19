@@ -6,12 +6,22 @@ RestRelModel::RestRelModel(QString name, QObject *parent) : QAbstractTableModel(
     _is_limited=false;
     _editable=false;
     _path="api/autorest/relations/"+_name;
+    currentReply = nullptr;
     QByteArray data;
     bool ok = RestConnection::instance()->sendSyncGet("api/autorest/relinfo/"+_name,data);
     if (ok){
         QJsonDocument doc = QJsonDocument::fromJson(data);
         _is_limited = !doc.object().value("lim").isNull();
         _editor = doc.object().value("editor").toString();
+    }
+}
+
+RestRelModel::~RestRelModel()
+{
+    if (currentReply) {
+        currentReply->disconnect(); // отключаем сигналы, чтобы не зайти в onResult
+        currentReply->abort();
+        currentReply->deleteLater();
     }
 }
 
@@ -103,9 +113,14 @@ void RestRelModel::processNextRequest()
     QUrlQuery query(url);
     QString pattern = query.queryItemValue("like");
 
-    QNetworkReply *reply = RestConnection::instance()->sendGet(url);
-    reply->setProperty("pattern",pattern);
-    connect(reply,SIGNAL(finished()),this,SLOT(onResult()));
+    if (currentReply && currentReply->isRunning()) {
+        currentReply->abort(); // Отменяем старый ненужный запрос
+        currentReply->deleteLater();
+    }
+    currentReply = RestConnection::instance()->sendGet(url);
+
+    currentReply->setProperty("pattern",pattern);
+    connect(currentReply,SIGNAL(finished()),this,SLOT(onResult()));
 }
 
 void RestRelModel::onResult()
@@ -114,15 +129,31 @@ void RestRelModel::onResult()
     if (!reply){
         return;
     }
-    if (reply->error()!=QNetworkReply::NoError){
-        QMessageBox::critical(nullptr,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
+
+    // Игнорируем штатную отмену старого запроса
+    if (reply->error() == QNetworkReply::OperationCanceledError) {
+        reply->deleteLater();
+        // Если это был текущий указатель, зануляем его
+        if (reply == currentReply) {
+            currentReply = nullptr;
+        }
+        return;
+    }
+
+    // Сбрасываем указатель, если пришел финальный ответ
+    if (reply == currentReply) {
+        currentReply = nullptr;
+    }
+
+    if (reply->error() != QNetworkReply::NoError){
+        QMessageBox::critical(nullptr, tr("Ошибка"), reply->errorString() + "\n" + reply->readAll(), QMessageBox::Cancel);
     } else {
         QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
-        const QJsonArray arr=doc.array();
+        const QJsonArray arr = doc.array();
         beginResetModel();
         _data.clear();
         for (const QJsonValue &value : arr) {
-            QVector<QVariant>row;
+            QVector<QVariant> row;
             row.push_back(value.toObject().value("key").toVariant());
             row.push_back(value.toObject().value("disp").toVariant());
             _data.push_back(row);

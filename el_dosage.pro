@@ -24,6 +24,7 @@ SOURCES += \
     rest/resttabledialog.cpp \
     rest/resttablemodel.cpp \
     rest/resttableview.cpp \
+    rest/tempfilemanager.cpp \
     rest_olap/axiswidget.cpp \
     rest_olap/cubewidget.cpp \
     rest_olap/cubic.cpp \
@@ -51,6 +52,7 @@ HEADERS += \
     rest/resttabledialog.h \
     rest/resttablemodel.h \
     rest/resttableview.h \
+    rest/tempfilemanager.h \
     rest_olap/axiswidget.h \
     rest_olap/cubewidget.h \
     rest_olap/cubic.h \

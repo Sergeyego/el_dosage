@@ -13,6 +13,7 @@
 #include <QFileIconProvider>
 #include <QTemporaryFile>
 #include "rest/restconnection.h"
+#include "rest/tempfilemanager.h"
 
 class ModelRcpConf : public QAbstractTableModel
 {

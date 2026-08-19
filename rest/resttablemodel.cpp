@@ -3,11 +3,21 @@
 RestTableModel::RestTableModel(QString name, QObject *parent) : QAbstractTableModel(parent), _rname(name)
 {
     isProcessing=false;
+    currentReply=nullptr;
     _path = "api/autorest/tables/"+_rname;
     block=false;
     insertable=true;
     editor = new DataEditor(&modelData,this);
     loadInfo();
+}
+
+RestTableModel::~RestTableModel()
+{
+    if (currentReply) {
+        currentReply->disconnect(); // отключаем сигналы, чтобы не зайти в onResult
+        currentReply->abort();
+        currentReply->deleteLater();
+    }
 }
 
 Qt::ItemFlags RestTableModel::flags(const QModelIndex &index) const
@@ -134,7 +144,7 @@ bool RestTableModel::removeRow(int row, const QModelIndex &parent)
         dat+=data(this->index(row,i),Qt::DisplayRole).toString();
     }
     int n=QMessageBox::question(nullptr,QString::fromUtf8("Подтвердите удаление"),
-                                  QString::fromUtf8("Подтветждаете удаление ")+dat+QString::fromUtf8("?"),QMessageBox::Yes| QMessageBox::No);
+                                  QString::fromUtf8("Подтверждаете удаление ")+dat+QString::fromUtf8("?"),QMessageBox::Yes| QMessageBox::No);
     bool ok=false;
     if (n==QMessageBox::Yes) {
         if (apiDelete(row)) {
@@ -380,8 +390,13 @@ void RestTableModel::processNextRequest()
     isProcessing = true;
     QUrl url = queue.dequeue();
 
-    QNetworkReply *reply = RestConnection::instance()->sendGet(url);
-    connect(reply,SIGNAL(finished()),this,SLOT(onResult()));
+    if (currentReply && currentReply->isRunning()) {
+        currentReply->abort(); // Отменяем старый ненужный запрос
+        currentReply->deleteLater();
+    }
+    currentReply = RestConnection::instance()->sendGet(url);
+
+    connect(currentReply,SIGNAL(finished()),this,SLOT(onResult()));
 }
 
 void RestTableModel::onResult()
@@ -390,6 +405,23 @@ void RestTableModel::onResult()
     if (!reply){
         return;
     }
+
+    // РЕШЕНИЕ: Игнорируем штатную отмену старого запроса
+    if (reply->error() == QNetworkReply::OperationCanceledError) {
+        qDebug()<<"reply aborted!";
+        reply->deleteLater();
+        // Если это был текущий указатель, зануляем его
+        if (reply == currentReply) {
+            currentReply = nullptr;
+        }
+        return;
+    }
+
+    // Сбрасываем указатель, если пришел финальный ответ
+    if (reply == currentReply) {
+        currentReply = nullptr;
+    }
+
     if (reply->error()!=QNetworkReply::NoError){
         this->clear();
         QMessageBox::critical(nullptr,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
@@ -461,11 +493,11 @@ void RestTableModel::loadInfo()
             inf.snam=value.toObject().value("snam").toString();
             inf.udt_name=value.toObject().value("udt_name").toString();
             inf.is_pk=value.toObject().value("is_pk").toBool();
-            inf.editale=value.toObject().value("editable").toBool();
+            inf.editable=value.toObject().value("editable").toBool();
             inf.checkable=value.toObject().value("checkable").toBool();
             inf.dec=value.toObject().value("dec").toInt();
             inf.relnam=value.toObject().value("relnam").toString();          
-            inf.flags = inf.editale ? (Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled) : (Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+            inf.flags = inf.editable ? (Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled) : (Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
             inf.defaultVal=nullValue(inf.udt_name);
             inf.width = value.toObject().value("width").toVariant();
             _columns.push_back(inf.nam);

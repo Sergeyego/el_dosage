@@ -172,12 +172,9 @@ void ModelRcpConf::download(QString filename)
     QByteArray encodedFileName = QUrl::toPercentEncoding(filename);
 
     QUrl url = QUrl(RestConnection::instance()->getUrl()+"/api/elrtr/dosage/s3/files/get/"+encodedFileName);
-    QString pureFileName = filename.section('/', -1);
-    QDir dir(QDir::tempPath());
-    QString fullSavePath = dir.filePath(pureFileName);
 
     QNetworkReply *reply = RestConnection::instance()->sendGet(url);
-    reply->setProperty("savePath", fullSavePath);
+    reply->setProperty("filename", filename);
     connect(reply,SIGNAL(finished()),this,SLOT(onDownloadFinished()));
 }
 
@@ -254,22 +251,26 @@ void ModelRcpConf::onUploadFinished()
 void ModelRcpConf::onDownloadFinished()
 {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    if (!reply){
+    if (!reply) {
         return;
     }
-    if (reply->error()!=QNetworkReply::NoError){
-        QMessageBox::critical(nullptr,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
+    QByteArray rawData = reply->readAll();
+
+    if (reply->error() != QNetworkReply::NoError) {
+        QMessageBox::critical(nullptr, tr("Ошибка"), reply->errorString() + "\n" + rawData, QMessageBox::Cancel);
     } else {
-        QString savePath = reply->property("savePath").toString();
-        QFile localFile(savePath);
-        if (localFile.open(QIODevice::WriteOnly)) {
-            localFile.write(reply->readAll());
-            localFile.close();
-            QFileInfo fileInfo(savePath);
-            QDesktopServices::openUrl((QUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()))));
-        } else {
-            QMessageBox::critical(nullptr,tr("Ошибка"),tr("Не удалось записать файл: ")+"\n"+savePath,QMessageBox::Cancel);
+        QString rawFileName = reply->property("filename").toString();
+
+        // 2. На всякий случай очищаем путь от GET-параметров урла (если они есть)
+        if (rawFileName.contains('?')) {
+            rawFileName = rawFileName.split('?').first();
         }
+
+        QFileInfo fileInfo(rawFileName);
+        QString ext = fileInfo.suffix().isEmpty() ? "pdf" : fileInfo.suffix().toLower();
+
+        TempFileManager::instance().createFile(rawData, ext, true);
     }
+
     reply->deleteLater();
 }

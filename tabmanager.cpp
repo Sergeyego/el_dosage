@@ -48,7 +48,9 @@ bool TabManager::setActiveSubWindow(QString t)
 
 void TabManager::closeTab(int index)
 {
-    tabWidget->widget(index)->close();
+    if (tabWidget->widget(index)) {
+        tabWidget->widget(index)->close();
+    }
 }
 
 void TabManager::loadSettings()
@@ -80,10 +82,4 @@ void TabManager::saveSettings()
     currenttab=tabWidget->tabText(tabWidget->currentIndex());
     settings.setValue("main_opentab", opentab);
     settings.setValue("main_currenttab",currenttab);
-    QString dirPath=(QDir::homePath()+"/.szsm/cash");
-    QDir dir(dirPath);
-    if (dir.exists()) {
-        dir.removeRecursively();
-    }
-    dir.mkpath(dirPath);
 }

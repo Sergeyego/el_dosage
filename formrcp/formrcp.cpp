@@ -237,12 +237,7 @@ void FormRcp::createXlsx()
     QVariant id_rcp = mapper->modelData(mapper->currentIndex(),"id");
     if (!id_rcp.isNull()){
         QUrl url(RestConnection::instance()->getUrl()+"/api/elrtr/dosage/xlsx/"+id_rcp.toString()+"?"+getRcpQuery().toString());
-        QDir dir(QDir::tempPath());
-        QString pureFileName = QString::number(QDateTime::currentMSecsSinceEpoch())+"-calc.xlsx";
-        QString fullSavePath = dir.filePath(pureFileName);
         QNetworkReply *reply = RestConnection::instance()->sendGet(url);
-        reply->setProperty("savePath", fullSavePath);
-        //qDebug()<<fullSavePath;
         connect(reply,SIGNAL(finished()),this,SLOT(onCreateXlsxFinished()));
     }
 }
@@ -256,16 +251,7 @@ void FormRcp::onCreateXlsxFinished()
     if (reply->error()!=QNetworkReply::NoError){
         QMessageBox::critical(this,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
     } else {
-        QString savePath = reply->property("savePath").toString();
-        QFile localFile(savePath);
-        if (localFile.open(QIODevice::WriteOnly)) {
-            localFile.write(reply->readAll());
-            localFile.close();
-            QFileInfo fileInfo(savePath);
-            QDesktopServices::openUrl((QUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()))));
-        } else {
-            QMessageBox::critical(this,tr("Ошибка"),tr("Не удалось записать файл: ")+"\n"+savePath,QMessageBox::Cancel);
-        }
+        TempFileManager::instance().createFile(reply->readAll(),"xlsx",true);
     }
     reply->deleteLater();
 }

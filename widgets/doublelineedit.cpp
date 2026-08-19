@@ -13,7 +13,7 @@ void DoubleLineEdit::keyPressEvent(QKeyEvent *e)
         insert(".");
         e->ignore();
     } else {
-        return QLineEdit::keyPressEvent(e);
+        QLineEdit::keyPressEvent(e);
     }
 }
 

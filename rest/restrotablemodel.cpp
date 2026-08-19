@@ -3,6 +3,16 @@
 RestRoTableModel::RestRoTableModel(QObject *parent) : QAbstractTableModel{parent}
 {
     isProcessing=false;
+    currentReply=nullptr;
+}
+
+RestRoTableModel::~RestRoTableModel()
+{
+    if (currentReply) {
+        currentReply->disconnect(); // отключаем сигналы, чтобы не зайти в onResult
+        currentReply->abort();
+        currentReply->deleteLater();
+    }
 }
 
 QVariant RestRoTableModel::data(const QModelIndex &index, int role) const
@@ -106,7 +116,7 @@ void RestRoTableModel::setModelData(const QJsonObject &data)
         inf.snam=value.toObject().value("snam").toString();
         inf.udt_name=value.toObject().value("udt_name").toString();
         inf.is_pk=false;
-        inf.editale=false;
+        inf.editable=false;
         inf.checkable=false;
         inf.dec=value.toObject().value("dec").toInt();
         inf.relnam="";
@@ -195,6 +205,7 @@ void RestRoTableModel::clear()
     beginResetModel();
     _columns.clear();
     colMap.clear();
+    modelData.clear();
     endResetModel();
     emit sigRefresh();
 }
@@ -209,8 +220,13 @@ void RestRoTableModel::processNextRequest()
     isProcessing = true;
     QUrl url = queue.dequeue();
 
-    QNetworkReply *reply = RestConnection::instance()->sendGet(url);
-    connect(reply,SIGNAL(finished()),this,SLOT(onResult()));
+    if (currentReply && currentReply->isRunning()) {
+        currentReply->abort(); // Отменяем старый ненужный запрос
+        currentReply->deleteLater();
+    }
+    currentReply = RestConnection::instance()->sendGet(url);
+
+    connect(currentReply,SIGNAL(finished()),this,SLOT(onResult()));
     emit sigStartRefresh();
 }
 
@@ -220,6 +236,21 @@ void RestRoTableModel::onResult()
     if (!reply){
         return;
     }
+    // Игнорируем штатную отмену старого запроса
+    if (reply->error() == QNetworkReply::OperationCanceledError) {
+        reply->deleteLater();
+        // Если это был текущий указатель, зануляем его
+        if (reply == currentReply) {
+            currentReply = nullptr;
+        }
+        return;
+    }
+
+    // Сбрасываем указатель, если пришел финальный ответ
+    if (reply == currentReply) {
+        currentReply = nullptr;
+    }
+
     if (reply->error()!=QNetworkReply::NoError){
         clear();
         QMessageBox::critical(nullptr,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
