@@ -119,7 +119,6 @@ private slots:
 private:
     QQueue<QUrl> queue;
     bool isProcessing;
-    QNetworkReply *currentReply;
     DataEditor *editor;
     QVector<QVector<cellData>> modelData;
     QMap<QString,colInfo> colMap;

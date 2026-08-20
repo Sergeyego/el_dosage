@@ -41,7 +41,6 @@ private:
     QStringList _columns;
     QQueue<QUrl> queue;
     bool isProcessing;
-    QNetworkReply *currentReply;
 
 signals :
     void sigRefresh();

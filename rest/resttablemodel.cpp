@@ -3,7 +3,6 @@
 RestTableModel::RestTableModel(QString name, QObject *parent) : QAbstractTableModel(parent), _rname(name)
 {
     isProcessing=false;
-    currentReply=nullptr;
     _path = "api/autorest/tables/"+_rname;
     block=false;
     insertable=true;
@@ -13,11 +12,7 @@ RestTableModel::RestTableModel(QString name, QObject *parent) : QAbstractTableMo
 
 RestTableModel::~RestTableModel()
 {
-    if (currentReply) {
-        currentReply->disconnect(); // отключаем сигналы, чтобы не зайти в onResult
-        currentReply->abort();
-        currentReply->deleteLater();
-    }
+
 }
 
 Qt::ItemFlags RestTableModel::flags(const QModelIndex &index) const
@@ -344,9 +339,9 @@ int RestTableModel::columnIndex(QString nam) const
 
 void RestTableModel::select()
 {
-    QUrl url = QUrl(RestConnection::instance()->getUrl()+"/"+_path);
+    QUrl url = QUrl(RestConnection::instance()->getUrl() + "/" + _path);
     QUrlQuery query;
-    query.addQueryItem("filter",_filter);
+    query.addQueryItem("filter", _filter);
     url.setQuery(query);
 
     queue.enqueue(url);
@@ -389,49 +384,60 @@ void RestTableModel::processNextRequest()
 
     isProcessing = true;
     QUrl url = queue.dequeue();
+    QNetworkReply *reply = RestConnection::instance()->sendGet(url);
 
-    if (currentReply && currentReply->isRunning()) {
-        currentReply->abort(); // Отменяем старый ненужный запрос
-        currentReply->deleteLater();
-    }
-    currentReply = RestConnection::instance()->sendGet(url);
-
-    connect(currentReply,SIGNAL(finished()),this,SLOT(onResult()));
+    connect(reply, &QNetworkReply::finished, this, &RestTableModel::onResult);
 }
 
 void RestTableModel::onResult()
 {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    if (!reply){
+    if (!reply) {
         return;
     }
 
-    // РЕШЕНИЕ: Игнорируем штатную отмену старого запроса
-    if (reply->error() == QNetworkReply::OperationCanceledError) {
-        qDebug()<<"reply aborted!";
-        reply->deleteLater();
-        // Если это был текущий указатель, зануляем его
-        if (reply == currentReply) {
-            currentReply = nullptr;
-        }
-        return;
-    }
+    const QByteArray data = reply->readAll();
+    const QNetworkReply::NetworkError netError = reply->error();
 
-    // Сбрасываем указатель, если пришел финальный ответ
-    if (reply == currentReply) {
-        currentReply = nullptr;
-    }
-
-    if (reply->error()!=QNetworkReply::NoError){
-        this->clear();
-        QMessageBox::critical(nullptr,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
-    } else {
-        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
-        const QJsonArray rows=doc.array();
-        this->setModelData(rows);
-    }
-    emit sigRefresh();
+    // Память освободится автоматически в следующем цикле событий
     reply->deleteLater();
+
+    // 1. Обработка штатной отмены запроса
+    if (netError == QNetworkReply::OperationCanceledError) {
+        processNextRequest();
+        return;
+    }
+
+    // 2. Обработка сетевых ошибок
+    if (netError != QNetworkReply::NoError) {
+        clear();
+        emit sigRefresh();
+        QMessageBox::critical(nullptr, tr("Ошибка сети"), reply->errorString() + "\n" + data, QMessageBox::Cancel);
+        processNextRequest();
+        return;
+    }
+
+    // 3. Парсинг JSON-документа
+    QJsonParseError jsonError;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &jsonError);
+
+    // 4. Обработка ошибок JSON
+    if (jsonError.error != QJsonParseError::NoError) {
+        clear();
+        emit sigRefresh();
+        QString errorString = tr("Ошибка JSON: ") + jsonError.errorString() +
+                              tr("\nПозиция: ") + QString::number(jsonError.offset);
+        QMessageBox::critical(nullptr, tr("Ошибка данных"), errorString, QMessageBox::Cancel);
+        processNextRequest();
+        return;
+    }
+
+    // 5. Успешное выполнение — просто обновляем данные
+    const QJsonArray rows = doc.array();
+    this->setModelData(rows);
+    emit sigRefresh();
+
+    // Строго переходим к следующему запросу
     processNextRequest();
 }
 

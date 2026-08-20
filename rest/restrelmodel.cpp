@@ -6,7 +6,6 @@ RestRelModel::RestRelModel(QString name, QObject *parent) : QAbstractTableModel(
     _is_limited=false;
     _editable=false;
     _path="api/autorest/relations/"+_name;
-    currentReply = nullptr;
     QByteArray data;
     bool ok = RestConnection::instance()->sendSyncGet("api/autorest/relinfo/"+_name,data);
     if (ok){
@@ -18,11 +17,7 @@ RestRelModel::RestRelModel(QString name, QObject *parent) : QAbstractTableModel(
 
 RestRelModel::~RestRelModel()
 {
-    if (currentReply) {
-        currentReply->disconnect(); // отключаем сигналы, чтобы не зайти в onResult
-        currentReply->abort();
-        currentReply->deleteLater();
-    }
+
 }
 
 QVariant RestRelModel::data(const QModelIndex &index, int role) const
@@ -84,11 +79,15 @@ void RestRelModel::refresh()
 void RestRelModel::refreshByPattern(QString pattern)
 {
     QUrlQuery query;
-    query.addQueryItem("like",pattern);
-    QUrl url = QUrl(RestConnection::instance()->getUrl()+"/"+_path);
+    query.addQueryItem("like", pattern);
+    QUrl url = QUrl(RestConnection::instance()->getUrl() + "/" + _path);
     url.setQuery(query);
 
+    // ОЧИЩАЕМ очередь перед добавлением нового запроса.
+    // Все старые, еще не начавшиеся поисковые запросы удаляются, так как они устарели.
+    queue.clear();
     queue.enqueue(url);
+
     if (!isProcessing) {
         processNextRequest();
     }
@@ -113,54 +112,75 @@ void RestRelModel::processNextRequest()
     QUrlQuery query(url);
     QString pattern = query.queryItemValue("like");
 
-    if (currentReply && currentReply->isRunning()) {
-        currentReply->abort(); // Отменяем старый ненужный запрос
-        currentReply->deleteLater();
-    }
-    currentReply = RestConnection::instance()->sendGet(url);
+    QNetworkReply *reply = RestConnection::instance()->sendGet(url);
+    reply->setProperty("pattern", pattern);
 
-    currentReply->setProperty("pattern",pattern);
-    connect(currentReply,SIGNAL(finished()),this,SLOT(onResult()));
+    connect(reply, &QNetworkReply::finished, this, &RestRelModel::onResult);
 }
 
 void RestRelModel::onResult()
 {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    if (!reply){
+    if (!reply) {
         return;
     }
 
-    // Игнорируем штатную отмену старого запроса
-    if (reply->error() == QNetworkReply::OperationCanceledError) {
-        reply->deleteLater();
-        // Если это был текущий указатель, зануляем его
-        if (reply == currentReply) {
-            currentReply = nullptr;
-        }
-        return;
-    }
+    const QByteArray data = reply->readAll();
+    const QNetworkReply::NetworkError netError = reply->error();
+    QString pattern = reply->property("pattern").toString();
 
-    // Сбрасываем указатель, если пришел финальный ответ
-    if (reply == currentReply) {
-        currentReply = nullptr;
-    }
-
-    if (reply->error() != QNetworkReply::NoError){
-        QMessageBox::critical(nullptr, tr("Ошибка"), reply->errorString() + "\n" + reply->readAll(), QMessageBox::Cancel);
-    } else {
-        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
-        const QJsonArray arr = doc.array();
-        beginResetModel();
-        _data.clear();
-        for (const QJsonValue &value : arr) {
-            QVector<QVariant> row;
-            row.push_back(value.toObject().value("key").toVariant());
-            row.push_back(value.toObject().value("disp").toVariant());
-            _data.push_back(row);
-        }
-        endResetModel();
-        emit refreshFinished(reply->property("pattern").toString());
-    }
     reply->deleteLater();
+
+    // ОПТИМИЗАЦИЯ: Если в очереди УЖЕ появился новый запрос, текущий ответ нам больше не нужен.
+    // Пропускаем парсинг и отрисовку, сразу берем актуальный запрос.
+    if (!queue.isEmpty()) {
+        processNextRequest();
+        return;
+    }
+
+    // 1. Обработка штатной отмены запроса
+    if (netError == QNetworkReply::OperationCanceledError) {
+        processNextRequest();
+        return;
+    }
+
+    // 2. Обработка сетевых ошибок
+    if (netError != QNetworkReply::NoError) {
+        clear();
+        emit refreshFinished(pattern);
+        QMessageBox::critical(nullptr, tr("Ошибка сети"), reply->errorString() + "\n" + data, QMessageBox::Cancel);
+        processNextRequest();
+        return;
+    }
+
+    // 3. Парсинг JSON-документа
+    QJsonParseError jsonError;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &jsonError);
+
+    // 4. Обработка ошибок JSON
+    if (jsonError.error != QJsonParseError::NoError) {
+        clear();
+        emit refreshFinished(pattern);
+        QString errorString = tr("Ошибка JSON: ") + jsonError.errorString() +
+                              tr("\nПозиция: ") + QString::number(jsonError.offset);
+        QMessageBox::critical(nullptr, tr("Ошибка данных"), errorString, QMessageBox::Cancel);
+        processNextRequest();
+        return;
+    }
+
+    // 5. Успешное выполнение
+    const QJsonArray arr = doc.array();
+    beginResetModel();
+    _data.clear();
+    for (const QJsonValue &value : arr) {
+        QVector<QVariant> row;
+        row.push_back(value.toObject().value("key").toVariant());
+        row.push_back(value.toObject().value("disp").toVariant());
+        _data.push_back(row);
+    }
+    endResetModel();
+
+    emit refreshFinished(pattern);
+
     processNextRequest();
 }

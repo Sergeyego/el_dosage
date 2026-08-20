@@ -206,16 +206,20 @@ void CubeWidget::onResult()
         currentReply = nullptr;
     }
 
+    QByteArray data=reply->readAll();
+
     if (reply->error()!=QNetworkReply::NoError){
-        QMessageBox::critical(nullptr,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
+        QMessageBox::critical(nullptr,tr("Ошибка"),reply->errorString()+"\n"+data,QMessageBox::Cancel);
     } else {
         QJsonParseError error;
-        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll(), &error);
+        QJsonDocument doc = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError) {
-            qDebug() << "Ошибка JSON:" << error.errorString() << "на позиции:" << error.offset;
+            QString errorString = "Ошибка JSON:" + error.errorString() + "на позиции:" + QString::number(error.offset);
+            QMessageBox::critical(nullptr,tr("Ошибка"),errorString,QMessageBox::Cancel);
+            quModel->clear();
+        } else {
+            quModel->setModelData(doc.object());
         }
-        //QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
-        quModel->setModelData(doc.object());
         upd();
     }
     reply->deleteLater();

@@ -41,7 +41,6 @@ private:
     QString _path;
     QString _editor;
     bool _editable;
-    QNetworkReply *currentReply;
 
 private slots:
     void processNextRequest();
