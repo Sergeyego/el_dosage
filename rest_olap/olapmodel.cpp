@@ -192,7 +192,7 @@ void ProxyDataModel::setSelectVal(int column, QStringList vals)
     beginFilterChange();
     selection.remove(column);
     selection.insert(column, vals);
-    endFilterChange(QSortFilterProxyModel::Rows);
+    endFilterChange();
 #else
     selection.remove(column);
     selection.insert(column, vals);
@@ -205,7 +205,7 @@ void ProxyDataModel::setFilterEnabled(bool b)
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 10, 0))
     beginFilterChange();
     en = b;
-    endFilterChange(QSortFilterProxyModel::Rows);
+    endFilterChange();
 #else
     en = b;
     invalidateFilter();
