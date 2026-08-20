@@ -175,7 +175,7 @@ QStringList ProxyDataModel::getSourceVal(int column)
     }
 
     // Универсальная конвертация QSet в список для Qt 5 и Qt 6
-#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
+#if (QT_VERSION < QT_VERSION_CHECK(5, 14, 0))
     QStringList l = uniqueVals.toList();
 #else
     QStringList l = QStringList(uniqueVals.begin(), uniqueVals.end());
@@ -187,13 +187,27 @@ QStringList ProxyDataModel::getSourceVal(int column)
 
 void ProxyDataModel::setSelectVal(int column, QStringList vals)
 {
+    // Повышаем порог до 6.10.0, где гарантированно есть обе функции и флаги
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 10, 0))
+    beginFilterChange();
     selection.remove(column);
-    selection.insert(column,vals);
+    selection.insert(column, vals);
+    endFilterChange(QSortFilterProxyModel::Rows);
+#else
+    selection.remove(column);
+    selection.insert(column, vals);
     invalidateFilter();
+#endif
 }
 
 void ProxyDataModel::setFilterEnabled(bool b)
 {
-    en=b;
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 10, 0))
+    beginFilterChange();
+    en = b;
+    endFilterChange(QSortFilterProxyModel::Rows);
+#else
+    en = b;
     invalidateFilter();
+#endif
 }
