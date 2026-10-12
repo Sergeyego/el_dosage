@@ -105,36 +105,39 @@ void FormRcp::upd()
     if (sender()==ui->pushButtonUpd){
         RelModels::instance()->updateAllRels();
     }
-    QString filter="";
+
     colVal id_el=ui->comboBoxMarkOnly->getCurrentData();
+
+    RestFilter filter;
+
+    RestFilter idElFilter = RestFilter::rule(modelRcp->tableName(),"id_el",RestFilter::Op::Eq,id_el.val.toInt());
+
     if (id_el.val.toInt()>0){
-        filter+=modelRcp->tableName()+".id_el = "+id_el.val.toString();
+        filter=idElFilter;
     }
-    QSet <int> levs;
+    QJsonArray levs;
     if (ui->checkBoxOld->isChecked()){
-        levs.insert(0);
+        levs.append(0);
     }
     if (ui->checkBoxOk->isChecked()){
-        levs.insert(1);
+        levs.append(1);
     }
     if (ui->checkBoxTest->isChecked()){
-        levs.insert(2);
+        levs.append(2);
     }
     if (ui->checkBoxBad->isChecked()){
-        levs.insert(3);
+        levs.append(3);
     }
     if (levs.size()){
-        if (!filter.isEmpty()){
-            filter+=" and ";
+        RestFilter levFilter = RestFilter::ruleIn(modelRcp->tableName(),"lev",levs);
+        if (id_el.val.toInt()>0){
+            filter=RestFilter(RestFilter::Group::And);
+            filter.add(idElFilter);
+            filter.add(levFilter);
+        } else {
+            filter = levFilter;
         }
-        QString flev;
-        for (const int lev : levs){
-            if (!flev.isEmpty()){
-                flev+=", ";
-            }
-            flev+=QString::number(lev);
-        }
-        filter+=modelRcp->tableName()+".lev in ("+flev+")";
+
     }
     modelRcp->setFilter(filter);
     modelRcp->select();
@@ -191,7 +194,7 @@ void FormRcp::markTextChanged()
 void FormRcp::updData(int index)
 {
     int id_rcp=mapper->modelData(index,"id").isNull() ? -1 : mapper->modelData(index,"id").toInt();
-    modelRcpData->setFilter(modelRcpData->tableName()+".id_rcp="+QString::number(id_rcp));
+    modelRcpData->setFilter(RestFilter::rule(modelRcpData->tableName(),"id_rcp",RestFilter::Op::Eq,id_rcp));
     modelRcpData->setDefaultValue("id_rcp",id_rcp);
     modelRcpData->select();
     modelRcpConf->refresh(id_rcp);
@@ -288,12 +291,16 @@ void FormRcp::calcSum()
 
 void FormRcp::copy()
 {
-    ui->pushButtonPaste->setEnabled(true);
     id_copy=modelRcp->getModelData(mapper->currentIndex(),"id").toInt();
+    ui->pushButtonPaste->setEnabled(id_copy > 0);
 }
 
 void FormRcp::paste()
 {
+    if (id_copy <= 0) {
+        QMessageBox::warning(this, tr("Вставка"),tr("Сначала нажмите «Взять состав» на нужной рецептуре."));
+        return;
+    }
     QByteArray body, data;
     int id_rcp = mapper->modelData(mapper->currentIndex(),"id").toInt();
     RestConnection::instance()->sendSyncRequest("api/elrtr/dosage/paste/"+QString::number(id_copy)+"/"+QString::number(id_rcp),"POST",body,data);

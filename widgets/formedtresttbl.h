@@ -15,13 +15,14 @@ class FormEdtRestTbl : public QWidget
 
 public:
     explicit FormEdtRestTbl(QString title, QString tableName, QString relName = QString(), QWidget *parent = nullptr);
+    RestTableModel *model();
     ~FormEdtRestTbl();
 
 private:
     Ui::FormEdtRestTbl *ui;
-    RestTableModel *model;
+    RestTableModel *edtModel;
 
-private slots:
+public slots:
     void updTbl();
 };
 

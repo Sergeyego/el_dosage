@@ -108,6 +108,9 @@ void MainWindow::newFormRcp()
 void MainWindow::newFormEdtComp()
 {
     if (!tabManager->exist(sender())){
-        tabManager->addSubWindow(new FormEdtRestTbl(tr("Редактировать список компонентов"),"matr","matr"),sender());
+        auto *formEdtRestTbl = new FormEdtRestTbl(tr("Редактировать список компонентов"),"matr","matr");
+        formEdtRestTbl->model()->setFilter(RestFilter::rule(formEdtRestTbl->model()->tableName(),"id",RestFilter::Op::Gte,0));
+        formEdtRestTbl->model()->select();
+        tabManager->addSubWindow(formEdtRestTbl,sender());
     }
 }

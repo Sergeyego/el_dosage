@@ -8,13 +8,17 @@ FormEdtRestTbl::FormEdtRestTbl(QString title, QString tableName, QString relName
     ui->setupUi(this);
     ui->labelTitle->setText(title);
     this->setWindowTitle(title);
-    model = new RestTableModel(tableName,this);
-    ui->tableView->setModel(model);
+    edtModel = new RestTableModel(tableName,this);
+    ui->tableView->setModel(edtModel);
     if (!relName.isEmpty()){
-        connect(model,SIGNAL(sigUpd()),RelModels::instance()->getModel(relName),SLOT(refresh()));
+        connect(edtModel,SIGNAL(sigUpd()),RelModels::instance()->getModel(relName),SLOT(refresh()));
     }
     connect(ui->pushButtonUpd,SIGNAL(clicked(bool)),this,SLOT(updTbl()));
-    model->select();
+}
+
+RestTableModel *FormEdtRestTbl::model()
+{
+    return edtModel;
 }
 
 FormEdtRestTbl::~FormEdtRestTbl()
@@ -25,7 +29,7 @@ FormEdtRestTbl::~FormEdtRestTbl()
 void FormEdtRestTbl::updTbl()
 {
     QVector<RestTableModel*> arrModel;
-    arrModel.push_back(model);
+    arrModel.push_back(edtModel);
     RelModels::instance()->updateRels(arrModel);
-    model->select();
+    edtModel->select();
 }

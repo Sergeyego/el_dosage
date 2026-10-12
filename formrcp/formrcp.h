@@ -32,6 +32,7 @@ private:
     ModelRcpConf *modelRcpConf;
     void loadSettings();
     void saveSettings();
+    QUrlQuery getRcpQuery();
 
 private slots:
     void upd();
@@ -40,7 +41,6 @@ private slots:
     void markTextChanged();
     void updData(int index);
     void updMode();
-    QUrlQuery getRcpQuery();
     void updCacl();
     void createXlsx();
     void onCreateXlsxFinished();
