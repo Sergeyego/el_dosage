@@ -252,7 +252,7 @@ void FormRcp::onCreateXlsxFinished()
         return;
     }
     if (reply->error()!=QNetworkReply::NoError){
-        QMessageBox::critical(this,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
+        RestError::critical(tr("Ошибка"),reply->errorString()+"\n"+reply->readAll());
     } else {
         TempFileManager::instance().createFile(reply->readAll(),"xlsx",true);
     }

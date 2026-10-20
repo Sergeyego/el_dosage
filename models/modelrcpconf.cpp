@@ -212,7 +212,7 @@ void ModelRcpConf::onResult()
     QString lastSegment = QFileInfo(reply->url().path()).fileName();
     current_id_rcp=lastSegment.toInt();
     if (reply->error()!=QNetworkReply::NoError){
-        QMessageBox::critical(nullptr,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
+        RestError::critical(tr("Ошибка"),reply->errorString()+"\n"+reply->readAll());
     } else {
         QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
         const QJsonArray arr=doc.object().value("files").toArray();
@@ -241,7 +241,7 @@ void ModelRcpConf::onUploadFinished()
         return;
     }
     if (reply->error()!=QNetworkReply::NoError){
-        QMessageBox::critical(nullptr,tr("Ошибка"),reply->errorString()+"\n"+reply->readAll(),QMessageBox::Cancel);
+        RestError::critical(tr("Ошибка"),reply->errorString()+"\n"+reply->readAll());
     } else {
         refresh(current_id_rcp);
     }
@@ -257,7 +257,7 @@ void ModelRcpConf::onDownloadFinished()
     QByteArray rawData = reply->readAll();
 
     if (reply->error() != QNetworkReply::NoError) {
-        QMessageBox::critical(nullptr, tr("Ошибка"), reply->errorString() + "\n" + rawData, QMessageBox::Cancel);
+        RestError::critical(tr("Ошибка"), reply->errorString() + "\n" + rawData);
     } else {
         QString rawFileName = reply->property("filename").toString();
 
