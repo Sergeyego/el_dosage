@@ -71,17 +71,11 @@ void MainWindow::clearEmptyMenus()
     QMenuBar* menuBar = this->menuBar();
     QList<QAction*> actions = menuBar->actions();
 
-    // Перебираем элементы с конца в начало
     for (int i = actions.count() - 1; i >= 0; --i) {
         QAction* action = actions.at(i);
         QMenu* menu = action->menu();
-
-        // Если действие открывает меню и это меню пустое
         if (menu != nullptr && menu->isEmpty()) {
-            // Удаляем отображение пункта из статус-бара
             menuBar->removeAction(action);
-
-            // Безопасно уничтожаем объект меню
             menu->deleteLater();
         }
     }
