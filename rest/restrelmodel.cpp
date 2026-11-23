@@ -6,6 +6,7 @@ RestRelModel::RestRelModel(QString name, QObject *parent) : QAbstractTableModel(
     _is_limited=false;
     _editable=false;
     _path="api/autorest/relations/"+_name;
+    _header<<tr("id")<<tr("Наименование");
     QByteArray data;
     bool ok = RestConnection::instance()->sendSyncGet("api/autorest/relinfo/"+_name,data);
     if (ok){
@@ -39,6 +40,23 @@ int RestRelModel::rowCount(const QModelIndex &/*parent*/) const
 int RestRelModel::columnCount(const QModelIndex &/*parent*/) const
 {
     return 2;
+}
+
+QVariant RestRelModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation==Qt::Horizontal && section>=0 && section<columnCount() && (role==Qt::EditRole || role==Qt::DisplayRole)){
+        return _header.at(section);
+    }
+    return QAbstractTableModel::headerData(section,orientation, role);
+}
+
+bool RestRelModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
+{
+    if (orientation==Qt::Horizontal && section>=0 && section<columnCount() && role==Qt::EditRole){
+        _header[section]=value.toString();
+        return true;
+    }
+    return QAbstractTableModel::setHeaderData(section,orientation,value,role);
 }
 
 QString RestRelModel::getName() const
@@ -183,7 +201,7 @@ void RestRelModel::onResult()
         row.disp=value.toObject().value("disp").toString();
         tmp.push_back(row);
     }
-    setMolelData(tmp);
+    setModelData(tmp);
 
     emit refreshFinished(pattern);
 
@@ -209,7 +227,7 @@ int RestRelModel::findRowByKey(QVariant key) const
     return -1;
 }
 
-void RestRelModel::setMolelData(const QList<colVal> &data)
+void RestRelModel::setModelData(const QList<colVal> &data)
 {
     beginResetModel();
     _data=data;

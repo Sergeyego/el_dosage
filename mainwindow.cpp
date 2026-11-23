@@ -11,6 +11,8 @@ MainWindow::MainWindow(QWidget *parent)
     actAction(ui->actionRcp,&MainWindow::newFormRcp,2);
     actAction(ui->actionComp,&MainWindow::newFormEdtComp,4);
 
+    actAction(ui->actionPartComp,&MainWindow::newFormPartComp,3);
+
     loadAnalytics();
     tabManager->loadSettings();
     loadSettings();
@@ -106,5 +108,12 @@ void MainWindow::newFormEdtComp()
         formEdtRestTbl->model()->setFilter(RestFilter::rule(formEdtRestTbl->model()->tableName(),"id",RestFilter::Op::Gte,0));
         formEdtRestTbl->model()->select();
         tabManager->addSubWindow(formEdtRestTbl,sender());
+    }
+}
+
+void MainWindow::newFormPartComp()
+{
+    if (!tabManager->exist(sender())){
+        tabManager->addSubWindow(new FormPartComp(),sender());
     }
 }

@@ -297,12 +297,19 @@ void FormRcp::copy()
 
 void FormRcp::paste()
 {
+    if (modelRcp->isEmpty() || mapper->currentIndex()<0){
+        return;
+    }
     if (id_copy <= 0) {
         QMessageBox::warning(this, tr("Вставка"),tr("Сначала нажмите «Взять состав» на нужной рецептуре."));
         return;
     }
-    QByteArray body, data;
     int id_rcp = mapper->modelData(mapper->currentIndex(),"id").toInt();
+    if (id_rcp==id_copy){
+        QMessageBox::warning(this, tr("Вставка"),tr("Источник и приемник совпадают."));
+        return;
+    }
+    QByteArray body, data;
     RestConnection::instance()->sendSyncRequest("api/elrtr/dosage/paste/"+QString::number(id_copy)+"/"+QString::number(id_rcp),"POST",body,data);
     modelRcpData->select();
     updCacl();

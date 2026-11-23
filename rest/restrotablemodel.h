@@ -19,6 +19,9 @@ public:
     int rowCount(const QModelIndex &parent=QModelIndex()) const;
     int columnCount(const QModelIndex &parent=QModelIndex()) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+    virtual bool removeRow(int row, const QModelIndex &parent = QModelIndex());
+    QString formatVal(const QVariant &val, int column) const;
     colInfo columnInfo(int col) const;
     QMetaType::Type columnType(int col) const;
     void setPath(QString p);
@@ -29,6 +32,7 @@ public:
     QVariant getModelData(int row, QString col) const;
     int findRowByKey(QVariant key, QString col) const;
     int columnIndex(QString nam) const;
+    void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
 public slots:
     void select();

@@ -19,8 +19,10 @@ public:
     explicit RestRelModel(QString name, QObject *parent = nullptr);
     ~RestRelModel();
     QVariant data(const QModelIndex &index, int role) const;
-    int rowCount(const QModelIndex &parent) const;
-    int columnCount(const QModelIndex &parent) const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role);
     QString getName() const;
     QString editor() const;
     bool isLimited() const;
@@ -29,7 +31,7 @@ public:
     void setEditable(bool e);
     colVal getModelData(int index) const;
     int findRowByKey(QVariant key) const;
-    void setMolelData(const QList<colVal> &data);
+    void setModelData(const QList<colVal> &data);
 
 public slots:
     void refresh();
@@ -48,6 +50,7 @@ private:
     QString _path;
     QString _editor;
     bool _editable;
+    QStringList _header;
 
 private slots:
     void processNextRequest();

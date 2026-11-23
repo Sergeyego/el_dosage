@@ -1,4 +1,6 @@
 #include "restrotablemodel.h"
+#include <numeric>   // std::iota
+#include <algorithm> // std::stable_sort
 
 RestRoTableModel::RestRoTableModel(QObject *parent) : QAbstractTableModel{parent}
 {
@@ -84,6 +86,98 @@ QVariant RestRoTableModel::headerData(int section, Qt::Orientation orientation, 
         return QString::number(section+1);
     }
     return QAbstractTableModel::headerData(section,orientation,role);
+}
+
+bool RestRoTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!index.isValid()) return false;
+    if (index.row() < 0 || index.row() >= modelData.size()) return false;
+    if (index.column() < 0 || index.column() >= _columns.size()) return false;
+
+    cellData &cell = modelData[index.row()][index.column()];
+    const QMetaType::Type colType = columnType(index.column());
+    const colInfo info = columnInfo(index.column());
+
+    if (role == Qt::CheckStateRole) {
+        // Только для колонок, которые реально помечены как checkable
+        if (!info.checkable) return false;
+
+        const bool checked = (value.toInt() == Qt::Checked);
+        if (colType == QMetaType::Bool) {
+            cell.edit = checked;
+        } else if (colType == QMetaType::Int) {
+            cell.edit = checked ? 1 : 0;
+        } else {
+            return false;
+        }
+        cell.display = formatVal(cell.edit, index.column());
+    } else if (role == Qt::EditRole) {
+        cell.edit = value;
+        cell.display = formatVal(value, index.column());
+    } else if (role == Qt::DisplayRole) {
+        cell.display = value.toString();
+    } else {
+        return false;
+    }
+
+    emit dataChanged(index, index);
+    return true;
+}
+
+bool RestRoTableModel::removeRow(int row, const QModelIndex &parent)
+{
+    if (row < 0 || row >= modelData.size()) {
+        return false;
+    }
+
+    beginRemoveRows(parent, row, row);
+    modelData.remove(row);
+    endRemoveRows();
+
+    return true;
+}
+
+QString RestRoTableModel::formatVal(const QVariant &val, int column) const
+{
+    if (val.isNull()) {
+        return QString();
+    }
+
+    const QMetaType::Type type = columnType(column);
+    const colInfo info = columnInfo(column);
+
+    switch (type) {
+    case QMetaType::Bool:
+        return val.toBool() ? tr("Да") : tr("Нет");
+
+    case QMetaType::Int:
+        return info.checkable
+                   ? (val.toBool() ? tr("Да") : tr("Нет"))
+                   : QLocale().toString(val.toInt());
+
+    case QMetaType::LongLong:
+        return QLocale().toString(val.toLongLong());
+
+    case QMetaType::Double:
+        return QLocale().toString(val.toDouble(), 'f', info.dec);
+
+    case QMetaType::QDate:
+        return val.toDate().toString(QStringLiteral("dd.MM.yyyy"));
+
+    case QMetaType::QTime:
+        return val.toTime().toString(QStringLiteral("HH:mm:ss"));
+
+    case QMetaType::QDateTime:
+        return val.toDateTime().toString(QStringLiteral("dd.MM.yyyy, HH:mm"));
+
+    case QMetaType::QByteArray:
+        return val.toByteArray().isEmpty()
+                   ? QString()
+                   : QStringLiteral("<%1 байт>").arg(val.toByteArray().size());
+
+    default:
+        return val.toString();
+    }
 }
 
 colInfo RestRoTableModel::columnInfo(int col) const
@@ -306,3 +400,90 @@ void RestRoTableModel::onResult()
     processNextRequest();
 }
 
+void RestRoTableModel::sort(int column, Qt::SortOrder order)
+{
+    if (column < 0 || column >= _columns.size() || modelData.size() < 2) {
+        return;
+    }
+
+    emit layoutAboutToBeChanged({}, QAbstractItemModel::VerticalSortHint);
+
+    const QModelIndexList oldPersistent = persistentIndexList();
+    const QMetaType::Type type = columnType(column);
+
+    QVector<int> order_idxs(modelData.size());
+    std::iota(order_idxs.begin(), order_idxs.end(), 0);
+
+    std::stable_sort(order_idxs.begin(), order_idxs.end(),
+                     [this, column, type, order](int a, int b) {
+                         const QVariant &va = modelData[a][column].edit;
+                         const QVariant &vb = modelData[b][column].edit;
+
+                         const bool aNull = !va.isValid() || va.isNull();
+                         const bool bNull = !vb.isValid() || vb.isNull();
+
+                         // NULL: в конце при asc, в начале при desc
+                         if (aNull || bNull) {
+                             if (aNull && bNull) return false;
+                             if (aNull) return order == Qt::DescendingOrder;
+                             return order == Qt::AscendingOrder;
+                         }
+
+                         int cmp = 0;
+                         switch (type) {
+                         case QMetaType::Int:
+                         case QMetaType::LongLong:
+                             cmp = va.toLongLong() < vb.toLongLong() ? -1
+                                                                     : (va.toLongLong() > vb.toLongLong() ? 1 : 0);
+                             break;
+                         case QMetaType::Double:
+                             cmp = va.toDouble() < vb.toDouble() ? -1
+                                                                 : (va.toDouble() > vb.toDouble() ? 1 : 0);
+                             break;
+                         case QMetaType::Bool:
+                             cmp = va.toBool() < vb.toBool() ? -1
+                                                             : (va.toBool() > vb.toBool() ? 1 : 0);
+                             break;
+                         case QMetaType::QDate:
+                         case QMetaType::QDateTime:
+                             cmp = va.toDateTime() < vb.toDateTime() ? -1
+                                                                     : (va.toDateTime() > vb.toDateTime() ? 1 : 0);
+                             break;
+                         case QMetaType::QTime:
+                             cmp = va.toTime() < vb.toTime() ? -1
+                                                             : (va.toTime() > vb.toTime() ? 1 : 0);
+                             break;
+                         default:
+                             cmp = QString::compare(va.toString(), vb.toString(), Qt::CaseInsensitive);
+                         }
+                         return order == Qt::AscendingOrder ? cmp < 0 : cmp > 0;
+                     });
+
+    // Если порядок не изменился — выходим без перестройки
+    bool identity = true;
+    for (int i = 0; i < order_idxs.size(); ++i) {
+        if (order_idxs[i] != i) { identity = false; break; }
+    }
+    if (identity) {
+        emit layoutChanged({}, QAbstractItemModel::VerticalSortHint);
+        return;
+    }
+
+    QVector<QVector<cellData>> newData;
+    newData.reserve(modelData.size());
+    QVector<int> oldToNew(modelData.size());
+    for (int newRow = 0; newRow < order_idxs.size(); ++newRow) {
+        oldToNew[order_idxs[newRow]] = newRow;
+        newData.push_back(modelData[order_idxs[newRow]]);
+    }
+    modelData = std::move(newData);
+
+    // Сохраняем выделение при сортировке
+    QModelIndexList newPersistent;
+    for (const QModelIndex &old : oldPersistent) {
+        newPersistent << index(oldToNew[old.row()], old.column());
+    }
+    changePersistentIndexList(oldPersistent, newPersistent);
+
+    emit layoutChanged({}, QAbstractItemModel::VerticalSortHint);
+}

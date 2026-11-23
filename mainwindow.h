@@ -8,6 +8,7 @@
 #include "rest_olap/cubewidget.h"
 #include "formrcp/formrcp.h"
 #include "widgets/formedtresttbl.h"
+#include "formpartcomp/formpartcomp.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -36,6 +37,7 @@ private slots:
     void newAnalytics();
     void newFormRcp();
     void newFormEdtComp();
+    void newFormPartComp();
 
 };
 #endif // MAINWINDOW_H
