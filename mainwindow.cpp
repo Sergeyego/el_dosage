@@ -6,10 +6,14 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    RelModels::instance()->getModel("chem")->setEditable(true);
+
     tabManager = new TabManager(ui->tabWidget,this);
 
     actAction(ui->actionRcp,&MainWindow::newFormRcp,2);
-    actAction(ui->actionComp,&MainWindow::newFormEdtComp,4);
+    actAction(ui->actionComp,&MainWindow::newFormEdtComp,3);
+    actAction(ui->actionBackfill,&MainWindow::newFormBackFill,3);
 
     actAction(ui->actionPartComp,&MainWindow::newFormPartComp,3);
 
@@ -104,10 +108,10 @@ void MainWindow::newFormRcp()
 void MainWindow::newFormEdtComp()
 {
     if (!tabManager->exist(sender())){
-        auto *formEdtRestTbl = new FormEdtRestTbl(tr("Редактировать список компонентов"),"matr","matr");
+        /*auto *formEdtRestTbl = new FormEdtRestTbl(tr("Редактировать список компонентов"),"matr","matr");
         formEdtRestTbl->model()->setFilter(RestFilter::rule(formEdtRestTbl->model()->tableName(),"id",RestFilter::Op::Gte,0));
-        formEdtRestTbl->model()->select();
-        tabManager->addSubWindow(formEdtRestTbl,sender());
+        formEdtRestTbl->model()->select();*/
+        tabManager->addSubWindow(new FormComp(),sender());
     }
 }
 
@@ -115,5 +119,12 @@ void MainWindow::newFormPartComp()
 {
     if (!tabManager->exist(sender())){
         tabManager->addSubWindow(new FormPartComp(),sender());
+    }
+}
+
+void MainWindow::newFormBackFill()
+{
+    if (!tabManager->exist(sender())){
+        tabManager->addSubWindow(new FormBackfill(),sender());
     }
 }

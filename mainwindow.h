@@ -9,6 +9,8 @@
 #include "formrcp/formrcp.h"
 #include "widgets/formedtresttbl.h"
 #include "formpartcomp/formpartcomp.h"
+#include "formcomp/formcomp.h"
+#include "formbackfill/formbackfill.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -38,6 +40,7 @@ private slots:
     void newFormRcp();
     void newFormEdtComp();
     void newFormPartComp();
+    void newFormBackFill();
 
 };
 #endif // MAINWINDOW_H

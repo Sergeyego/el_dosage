@@ -7,6 +7,8 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    formbackfill/formbackfill.cpp \
+    formcomp/formcomp.cpp \
     formpartcomp/formpartcomp.cpp \
     formrcp/formrcp.cpp \
     main.cpp \
@@ -39,6 +41,8 @@ SOURCES += \
     widgets/formedtresttbl.cpp
 
 HEADERS += \
+    formbackfill/formbackfill.h \
+    formcomp/formcomp.h \
     formpartcomp/formpartcomp.h \
     formrcp/formrcp.h \
     mainwindow.h \
@@ -71,6 +75,8 @@ HEADERS += \
     widgets/formedtresttbl.h
 
 FORMS += \
+    formbackfill/formbackfill.ui \
+    formcomp/formcomp.ui \
     formpartcomp/formpartcomp.ui \
     formrcp/formrcp.ui \
     mainwindow.ui \
