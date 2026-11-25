@@ -8,7 +8,9 @@ CONFIG += c++17
 
 SOURCES += \
     formbackfill/formbackfill.cpp \
+    formbackfillhist/formbackfillhist.cpp \
     formcomp/formcomp.cpp \
+    formdoz/formdoz.cpp \
     formpartcomp/formpartcomp.cpp \
     formrcp/formrcp.cpp \
     main.cpp \
@@ -42,7 +44,9 @@ SOURCES += \
 
 HEADERS += \
     formbackfill/formbackfill.h \
+    formbackfillhist/formbackfillhist.h \
     formcomp/formcomp.h \
+    formdoz/formdoz.h \
     formpartcomp/formpartcomp.h \
     formrcp/formrcp.h \
     mainwindow.h \
@@ -76,7 +80,9 @@ HEADERS += \
 
 FORMS += \
     formbackfill/formbackfill.ui \
+    formbackfillhist/formbackfillhist.ui \
     formcomp/formcomp.ui \
+    formdoz/formdoz.ui \
     formpartcomp/formpartcomp.ui \
     formrcp/formrcp.ui \
     mainwindow.ui \

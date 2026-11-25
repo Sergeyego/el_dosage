@@ -13,7 +13,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     actAction(ui->actionRcp,&MainWindow::newFormRcp,2);
     actAction(ui->actionComp,&MainWindow::newFormEdtComp,3);
-    actAction(ui->actionBackfill,&MainWindow::newFormBackFill,3);
+    actAction(ui->actionBackfill,&MainWindow::newFormBackfill,3);
+    actAction(ui->actionBackfillHist,&MainWindow::newFormBackfillHist,3);
+    actAction(ui->actionDoz,&MainWindow::newFormDoz,3);
 
     actAction(ui->actionPartComp,&MainWindow::newFormPartComp,3);
 
@@ -122,9 +124,23 @@ void MainWindow::newFormPartComp()
     }
 }
 
-void MainWindow::newFormBackFill()
+void MainWindow::newFormBackfill()
 {
     if (!tabManager->exist(sender())){
         tabManager->addSubWindow(new FormBackfill(),sender());
+    }
+}
+
+void MainWindow::newFormBackfillHist()
+{
+    if (!tabManager->exist(sender())){
+        tabManager->addSubWindow(new FormBackfillHist(),sender());
+    }
+}
+
+void MainWindow::newFormDoz()
+{
+    if (!tabManager->exist(sender())){
+        tabManager->addSubWindow(new FormDoz(),sender());
     }
 }

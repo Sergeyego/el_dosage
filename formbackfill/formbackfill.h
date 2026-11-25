@@ -7,25 +7,10 @@
 #include "rest/resttablemodel.h"
 #include "rest/restrotablemodel.h"
 #include "formbackfill/formbackfill.h"
-#include "progressreportdialog/progressreportdialog.h"
 
 namespace Ui {
 class FormBackfill;
 }
-
-/*class ModelStatBunk: public ModelRo
-{
-public:
-    ModelStatBunk(QObject *parent = nullptr);
-    void refresh(QDateTime datetime, int id_cex);
-};
-
-class ModelLoadBunk : public DbTableModel
-{
-public:
-    ModelLoadBunk(QObject *parent = nullptr);
-    void refresh(QDate beg, QDate end, int id_cex);
-};*/
 
 class FormBackfill : public QWidget
 {
@@ -41,14 +26,12 @@ private:
     RestTableModel *modelLoadBunk;
     QSortFilterProxyModel *modelBunk;
     QSortFilterProxyModel *modelPart;
-    ProgressReportDialog *prd;
 
 private slots:
     void updStat();
+    void updStatFinished();
     void updStatTime();
     void updLoad();
-    void save();
-    void updPart();
 };
 
 #endif // FORMBACKFILL_H

@@ -11,6 +11,8 @@
 #include "formpartcomp/formpartcomp.h"
 #include "formcomp/formcomp.h"
 #include "formbackfill/formbackfill.h"
+#include "formbackfillhist/formbackfillhist.h"
+#include "formdoz/formdoz.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -40,7 +42,8 @@ private slots:
     void newFormRcp();
     void newFormEdtComp();
     void newFormPartComp();
-    void newFormBackFill();
-
+    void newFormBackfill();
+    void newFormBackfillHist();
+    void newFormDoz();
 };
 #endif // MAINWINDOW_H

@@ -27,6 +27,7 @@ FormComp::FormComp(QWidget *parent)
 
     connect(mapper,SIGNAL(currentIndexChanged(int)),this,SLOT(updData(int)));
     connect(ui->pushButtonUpd,SIGNAL(clicked(bool)),this,SLOT(upd()));
+    connect(modelComp,SIGNAL(sigUpd()),RelModels::instance()->getModel("matr"),SLOT(refresh()));
 
     upd();
 }

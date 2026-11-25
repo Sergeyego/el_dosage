@@ -50,11 +50,13 @@
      <string>Засыпка</string>
     </property>
     <addaction name="actionBackfill"/>
+    <addaction name="actionBackfillHist"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="title">
      <string>Дозировка</string>
     </property>
+    <addaction name="actionDoz"/>
    </widget>
    <widget class="QMenu" name="menu_5">
     <property name="title">
@@ -113,6 +115,16 @@
   <action name="actionBackfill">
    <property name="text">
     <string>Засыпать компоненты</string>
+   </property>
+  </action>
+  <action name="actionDoz">
+   <property name="text">
+    <string>Партии дозировки</string>
+   </property>
+  </action>
+  <action name="actionBackfillHist">
+   <property name="text">
+    <string>История засыпки</string>
    </property>
   </action>
  </widget>
