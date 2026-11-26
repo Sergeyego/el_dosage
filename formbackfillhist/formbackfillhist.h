@@ -19,9 +19,12 @@ public:
 private:
     Ui::FormBackfillHist *ui;
     RestRoTableModel *modelHist;
+    int current_id;
+    RestRelModel *modelComp;
 
 private slots:
     void updHist();
+    void updCompFinished();
 };
 
 #endif // FORMBACKFILLHIST_H

@@ -9,28 +9,28 @@ FormBackfillHist::FormBackfillHist(QWidget *parent) :
     ui->dateTimeEdit->setDate(QDate::currentDate().addDays(-365));
     ui->dateTimeEdit->calendarWidget()->setFirstDayOfWeek(Qt::Monday);
 
-    /*if (!Rels::instance()->relCex->model()->isInital()){
-        Rels::instance()->relCex->refreshModel();
-    }
-    ui->comboBoxCex->setModel(Rels::instance()->relCex->model());
-    ui->comboBoxCex->setEditable(false);
+    current_id=-1;
 
-    if (!Rels::instance()->relCmp->model()->isInital()){
-        Rels::instance()->relCmp->refreshModel();
-    }
+    ui->comboBoxCex->setModel(RelModels::instance()->getModel("bunk_cex"));
+    colVal curCex;
+    curCex.val=1;
+    ui->comboBoxCex->setCurrentData(curCex);
 
-    modelHist = new ModelRo(this);
-    ui->tableViewHist->setModel(modelHist);
-
-    ui->tableViewComp->setModel(Rels::instance()->relCmp->model());
+    modelComp=RelModels::instance()->getModel("matr");
+    ui->tableViewComp->setModel(modelComp);
     ui->tableViewComp->setColumnHidden(0,true);
     ui->tableViewComp->setColumnWidth(1,270);
-    ui->tableViewComp->setColumnHidden(2,true);
+
+    modelHist = new RestRoTableModel(this);
+    ui->tableViewHist->setModel(modelHist);
 
     connect(ui->tableViewComp->selectionModel(),SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),this,SLOT(updHist()));
     connect(ui->dateTimeEdit,SIGNAL(dateTimeChanged(QDateTime)),this,SLOT(updHist()));
-    connect(modelHist,SIGNAL(newQuery()),ui->tableViewHist,SLOT(resizeToContents()));
-    connect(ui->comboBoxCex,SIGNAL(currentIndexChanged(int)),this,SLOT(updHist()));*/
+    connect(ui->comboBoxCex,SIGNAL(currentIndexChanged(int)),this,SLOT(updHist()));
+    connect(modelComp,SIGNAL(refreshFinished(QString)),this,SLOT(updCompFinished()));
+    connect(ui->pushButtonUpd,SIGNAL(clicked(bool)),modelComp,SLOT(refresh()));
+
+    updCompFinished();
 }
 
 FormBackfillHist::~FormBackfillHist()
@@ -40,26 +40,28 @@ FormBackfillHist::~FormBackfillHist()
 
 void FormBackfillHist::updHist()
 {
-    /*QModelIndex indComp=ui->tableViewComp->model()->index(ui->tableViewComp->currentIndex().row(),0);
+    QModelIndex indComp=ui->tableViewComp->model()->index(ui->tableViewComp->currentIndex().row(),0);
+    if (indComp.row()<0){
+        modelHist->clear();
+        return;
+    }
     int id_comp=ui->tableViewComp->model()->data(indComp,Qt::EditRole).toInt();
     int id_cex=ui->comboBoxCex->getCurrentData().val.toInt();
-    QSqlQuery query;
-    query.prepare("select bc.dtm as dtm, b.numer, bc.parti, tp.nam as typ, bo.nam, bc.kvo from bunk_comp as bc "
-                  "inner join bunk as b on b.id=bc.id_bunk "
-                  "inner join matr as m on m.id=bc.id_comp "
-                  "inner join el_types as tp on tp.id=bc.id_grp "
-                  "inner join bunk_op as bo on bo.id=bc.id_op "
-                  "where bc.dtm >= :dt and bc.id_comp = :id_comp and bc.id_cex= :id_cex "
-                  "order by dtm desc");
-    query.bindValue(":dt",ui->dateTimeEdit->dateTime());
-    query.bindValue(":id_comp",id_comp);
-    query.bindValue(":id_cex",id_cex);
-    if (modelHist->execQuery(query)){
-        modelHist->setHeaderData(0,Qt::Horizontal,QString::fromUtf8("Дата засыпки"));
-        modelHist->setHeaderData(1,Qt::Horizontal,QString::fromUtf8("Бункер"));
-        modelHist->setHeaderData(2,Qt::Horizontal,QString::fromUtf8("Партия"));
-        modelHist->setHeaderData(3,Qt::Horizontal,QString::fromUtf8("Группа"));
-        modelHist->setHeaderData(4,Qt::Horizontal,QString::fromUtf8("Операция"));
-        modelHist->setHeaderData(5,Qt::Horizontal,QString::fromUtf8("К-во, кг"));
-    }*/
+    current_id=id_comp;
+    QUrlQuery query;
+    query.addQueryItem("dtm",ui->dateTimeEdit->dateTime().toString("yyyy-MM-dd HH:mm:ss"));
+    modelHist->setPath("api/elrtr/dosage/comp/bunk/history/"+QString::number(id_cex)+"/"+QString::number(id_comp)+"?"+query.toString());
+    modelHist->select();
+}
+
+void FormBackfillHist::updCompFinished()
+{
+    if (ui->tableViewComp->model()->rowCount()){
+        int row = current_id>=0 ? modelComp->findRowByKey(current_id) : -1;
+        if (row>=0){
+            ui->tableViewComp->selectRow(row);
+        } else {
+            ui->tableViewComp->selectRow(0);
+        }
+    }
 }

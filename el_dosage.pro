@@ -1,4 +1,4 @@
-QT += widgets network
+QT += widgets network xml
 
 CONFIG += c++17
 
@@ -7,6 +7,8 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    dialognew/dialognew.cpp \
+    dialognew/tablemodel.cpp \
     formbackfill/formbackfill.cpp \
     formbackfillhist/formbackfillhist.cpp \
     formcomp/formcomp.cpp \
@@ -43,6 +45,8 @@ SOURCES += \
     widgets/formedtresttbl.cpp
 
 HEADERS += \
+    dialognew/dialognew.h \
+    dialognew/tablemodel.h \
     formbackfill/formbackfill.h \
     formbackfillhist/formbackfillhist.h \
     formcomp/formcomp.h \
@@ -79,6 +83,7 @@ HEADERS += \
     widgets/formedtresttbl.h
 
 FORMS += \
+    dialognew/dialognew.ui \
     formbackfill/formbackfill.ui \
     formbackfillhist/formbackfillhist.ui \
     formcomp/formcomp.ui \

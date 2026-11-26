@@ -6,34 +6,22 @@
 #include <QSettings>
 #include "rest/resttablemodel.h"
 #include "rest/restrotablemodel.h"
-//#include "dialognew.h"
+#include "dialognew/dialognew.h"
 
 namespace Ui {
 class FormDoz;
 }
 
-/*class ModelDoz : public DbTableModel
+class ModelDoz : public RestRoTableModel
 {
     Q_OBJECT
 public:
     explicit ModelDoz(QWidget *parent = nullptr);
-    void refresh(QDate beg, QDate end, bool srt);
-    QVariant data(const QModelIndex &index, int role) const;
-    bool insertRow(int row, const QModelIndex &parent);
-    void confirmDoz(int row);
+    Qt::ItemFlags flags(const QModelIndex &index) const;
+    void refresh(QDate beg, QDate end);
 protected:
-    bool deleteDb(int row);
-};
-
-class ModelDozData : public DbTableModel
-{
-    Q_OBJECT
-public:
-    explicit ModelDozData(QWidget *parent = nullptr);
-    void refresh(int id_doz);
-    QVariant data(const QModelIndex &index, int role) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
-};*/
+};
 
 class FormDoz : public QWidget
 {
@@ -49,13 +37,15 @@ private:
     QAction *actionConfirm;
     QAction *actionSave;
     QAction *actionNew;
-    RestRoTableModel *modelDoz;
+    ModelDoz *modelDoz;
     RestTableModel *modelDozData;
     void loadSettings();
     void saveSettings();
+    int current_id;
 
 private slots:
     void upd();
+    void updFinished();
     void updDozData(QModelIndex index);
     void delDoz();
     void confirmDoz();
